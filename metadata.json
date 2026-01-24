@@ -1,0 +1,7 @@
+{
+  "name": "akrona",
+  "description": "ÅKRONA - Premium Architectural Property Management & Real Estate Super App.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

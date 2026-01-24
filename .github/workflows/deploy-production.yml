@@ -1,0 +1,222 @@
+# ÅKRONA Production Deployment
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to deploy'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # Run full test suite before production deploy
+  test:
+    name: Pre-deployment Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: akrona_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install & Test Backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          npx prisma generate
+          npx prisma migrate deploy
+          npm test -- --run
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/akrona_test
+          JWT_SECRET: test-secret
+          NODE_ENV: test
+
+  # Build and push production images
+  build:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Version
+        id: version
+        run: echo "VERSION=${{ github.event.release.tag_name || github.event.inputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/frontend:${{ steps.version.outputs.VERSION }}
+            ghcr.io/${{ github.repository }}/frontend:latest
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.VERSION }}
+            ghcr.io/${{ github.repository }}/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+
+  # Deploy to production
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.version }}
+
+      - name: Create Backup Before Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/akrona
+            ./scripts/backup.sh pre-deploy-${{ needs.build.outputs.version }}
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/akrona
+            
+            # Pull latest images
+            docker pull ghcr.io/${{ github.repository }}/frontend:${{ needs.build.outputs.version }}
+            docker pull ghcr.io/${{ github.repository }}/backend:${{ needs.build.outputs.version }}
+            
+            # Tag as current
+            docker tag ghcr.io/${{ github.repository }}/frontend:${{ needs.build.outputs.version }} akrona-frontend:current
+            docker tag ghcr.io/${{ github.repository }}/backend:${{ needs.build.outputs.version }} akrona-backend:current
+            
+            # Store current version for rollback
+            echo "${{ needs.build.outputs.version }}" > .current-version
+            
+            # Blue-green deployment
+            docker-compose -f docker-compose.prod.yml up -d --no-deps frontend backend
+            
+            # Wait for services to be healthy
+            sleep 30
+            
+            # Health checks
+            curl -f http://localhost:3001/health || exit 1
+            curl -f http://localhost/ || exit 1
+            
+            # Clean up old images (keep last 3 versions)
+            docker image prune -f
+            
+            echo "✅ Production deployment of ${{ needs.build.outputs.version }} successful!"
+
+      - name: Verify Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            # Run smoke tests
+            curl -f https://akrona.example.com/api/health
+            curl -f https://akrona.example.com/
+
+      - name: Create Sentry Release
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        with:
+          environment: production
+          version: ${{ needs.build.outputs.version }}
+
+      - name: Notify on Success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: '🚀 Production ${{ needs.build.outputs.version }} deployed successfully!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Rollback on Failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/akrona
+            ./scripts/rollback.sh
+            echo "⚠️ Rolled back to previous version"
+
+      - name: Notify on Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: '❌ Production deployment failed! Rollback executed.'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

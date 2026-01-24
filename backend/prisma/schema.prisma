@@ -1,0 +1,194 @@
+// Prisma schema for ÅKRONA database
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Site/Community Management
+model Site {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  blockCount  Int      @default(1)
+  unitCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  users         User[]
+  tickets       Ticket[]
+  announcements Announcement[]
+  forumPosts    ForumPost[]
+  transactions  Transaction[]
+}
+
+// User Management
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String?  @unique
+  name          String
+  passwordHash  String?
+  phoneNumber   String?
+  avatar        String?
+  role          UserRole @default(RESIDENT)
+  status        UserStatus @default(PENDING)
+  block         String?
+  apartment     String?
+  balance       Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  siteId        String
+  site          Site     @relation(fields: [siteId], references: [id])
+  
+  tickets       Ticket[]
+  forumPosts    ForumPost[]
+  transactions  Transaction[]
+  sessions      Session[]
+  activityLogs  ActivityLog[]
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  RESIDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+  SUSPENDED
+}
+
+// Session Management
+model Session {
+  id           String   @id @default(cuid())
+  token        String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Support Tickets
+model Ticket {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    String
+  status      TicketStatus @default(OPEN)
+  priority    Priority     @default(MEDIUM)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  siteId      String
+  site        Site         @relation(fields: [siteId], references: [id])
+  
+  comments    TicketComment[]
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model TicketComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+}
+
+// Announcements
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id])
+  authorId  String
+}
+
+// Forum Posts
+model ForumPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  votes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id])
+}
+
+// Financial Transactions
+model Transaction {
+  id          String          @id @default(cuid())
+  amount      Float
+  type        TransactionType
+  category    String
+  description String?
+  status      PaymentStatus   @default(PENDING)
+  dueDate     DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime        @default(now())
+  
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  siteId      String
+  site        Site            @relation(fields: [siteId], references: [id])
+}
+
+enum TransactionType {
+  DUES
+  PAYMENT
+  EXPENSE
+  REFUND
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// Activity Logs for Audit
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
