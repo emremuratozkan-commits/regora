@@ -7,14 +7,42 @@ import {
     registerStep2Schema,
     parseWithErrors,
     sanitizeInput,
-    type LoginFormData,
-    type RegisterStep1Data,
-    type RegisterStep2Data,
     type ValidationError
 } from '../utils/validation';
 
+// Input field component extracted to prevent re-renders inside Login component
+const InputField: React.FC<{
+    type: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+    label?: string;
+    error?: string;
+    autoFocus?: boolean;
+}> = ({ type, value, onChange, placeholder, label, error, autoFocus }) => (
+    <div className="space-y-1">
+        {label && (
+            <label className="text-[10px] font-bold text-gray-500 ml-1 tracking-widest uppercase">
+                {label}
+            </label>
+        )}
+        <input
+            autoFocus={autoFocus}
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            autoComplete={type === 'password' ? 'current-password' : 'username'}
+            className={`w-full bg-dark-card border ${error ? 'border-red-500' : 'border-dark-border'} text-white rounded-2xl px-5 py-4 outline-none focus:border-white transition-colors placeholder:text-gray-700 font-medium`}
+        />
+        {error && (
+            <p className="text-red-500 text-xs ml-1 mt-1">{error}</p>
+        )}
+    </div>
+);
+
 const Login: React.FC = () => {
-    const { login, register, sites, showToast } = useApp();
+    const { login, register, sites } = useApp();
 
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
     const [loginUsername, setLoginUsername] = useState('');
@@ -96,8 +124,8 @@ const Login: React.FC = () => {
                 sanitizeInput(regUsername),
                 regPhone,
                 regSiteId,
-                sanitizeInput(result.data.block),
-                sanitizeInput(result.data.apartment)
+                sanitizeInput(regBlock),
+                sanitizeInput(regApt)
             );
             if (success) {
                 setAuthMode('login');
@@ -118,39 +146,11 @@ const Login: React.FC = () => {
         setLoginPassword('Admin123'); // Default for demo
     };
 
-    // Input field component with error display
-    const InputField: React.FC<{
-        type: string;
-        value: string;
-        onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-        placeholder: string;
-        label?: string;
-        error?: string;
-    }> = ({ type, value, onChange, placeholder, label, error }) => (
-        <div className="space-y-1">
-            {label && (
-                <label className="text-[10px] font-bold text-gray-500 ml-1 tracking-widest uppercase">
-                    {label}
-                </label>
-            )}
-            <input
-                type={type}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className={`w-full bg-dark-card border ${error ? 'border-red-500' : 'border-dark-border'} text-white rounded-2xl px-5 py-4 outline-none focus:border-white transition-colors placeholder:text-gray-700 font-medium`}
-            />
-            {error && (
-                <p className="text-red-500 text-xs ml-1 mt-1">{error}</p>
-            )}
-        </div>
-    );
-
     return (
         <div className="min-h-screen flex flex-col justify-center px-6 pb-12 animate-fade-in bg-dark-bg">
             <div className="flex flex-col items-center mb-10">
-                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-white/10 mb-6">
-                    <span className="material-symbols-rounded text-5xl text-black font-variation-filled">lock</span>
+                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-white/10 mb-6 font-variation-filled">
+                    <span className="material-symbols-rounded text-5xl text-black">lock</span>
                 </div>
                 <h1 className="text-4xl font-bold text-white tracking-widest uppercase">ÅKRONA</h1>
                 <p className="text-gray-500 mt-2 text-xs tracking-widest uppercase font-medium">Kurumsal Mülk Yönetimi</p>
@@ -181,6 +181,7 @@ const Login: React.FC = () => {
                             placeholder="Kullanıcı adınız"
                             label="Kullanıcı Adı"
                             error={getFieldError(loginErrors, 'username')}
+                            autoFocus
                         />
 
                         <InputField

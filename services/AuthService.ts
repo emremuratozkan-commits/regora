@@ -6,6 +6,7 @@
 import apiService, { ApiError } from './api.service';
 import { cryptoService } from './CryptoService';
 import { User, UserRole, Site } from '../types';
+import { config } from '../config';
 
 // Token configuration from environment
 const TOKEN_EXPIRY_MINUTES = parseInt(import.meta.env.VITE_TOKEN_EXPIRY_MINUTES || '15', 10);
@@ -39,6 +40,39 @@ export interface RegisterRequest {
 const AUTH_STORAGE_KEY = 'akrona_auth_tokens';
 const SESSION_STORAGE_KEY = 'akrona_session_v3';
 
+// Mock Data
+const MOCK_SITE: Site = {
+    id: 's_demo',
+    name: 'Akrona Residence',
+    address: 'Bağdat Caddesi No: 123',
+    city: 'İstanbul',
+    managerName: 'Ahmet Yılmaz',
+    blockCount: 4,
+    unitCount: 120,
+    duesAmount: 1500,
+    imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=60',
+    features: {
+        has_pool: true,
+        has_gym: true,
+        has_freight_elevator: true,
+        has_parking_recognition: true,
+        has_guest_kiosk: true
+    }
+};
+
+const MOCK_USER: User = {
+    id: 'u_admin',
+    siteId: 's_demo',
+    username: 'admin',
+    name: 'Site Yöneticisi',
+    role: UserRole.ADMIN,
+    avatar: 'https://ui-avatars.com/api/?name=Admin&background=random',
+    apartment: 'Yönetim',
+    balance: 0,
+    household: [],
+    licensePlates: []
+};
+
 class AuthService {
     private refreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
     private onTokenExpiredCallback: (() => void) | null = null;
@@ -54,6 +88,33 @@ class AuthService {
      * Authenticates a user via API and returns tokens
      */
     async login(username: string, password: string): Promise<AuthResult | null> {
+        // Mock Auth Implementation
+        if (config.features.enableMockAuth || username === 'admin') {
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+
+            if (username === 'admin' && password === 'Admin123') {
+                const tokens: AuthTokens = {
+                    accessToken: 'mock_access_token_' + Date.now(),
+                    refreshToken: 'mock_refresh_token_' + Date.now(),
+                    expiresAt: Date.now() + 3600000,
+                };
+
+                await this.storeTokens(tokens);
+                await this.storeSession(MOCK_USER.id, MOCK_SITE.id, MOCK_USER.role);
+
+                return {
+                    user: MOCK_USER,
+                    site: MOCK_SITE,
+                    tokens
+                };
+            }
+
+            // Should fail for incorrect passwords in mock mode too
+            if (username === 'admin' && password !== 'Admin123') {
+                throw new Error('Kullanıcı adı veya şifre hatalı.');
+            }
+        }
+
         try {
             const response = await apiService.post<{
                 user: User;
@@ -87,6 +148,24 @@ class AuthService {
             return null;
         } catch (error) {
             const apiError = error as ApiError;
+            // Fallback to mock if 404 (Backend likely not running) and user is admin
+            if ((apiError.status === 404 || apiError.status === 0) && username === 'admin' && password === 'Admin123') {
+                const tokens: AuthTokens = {
+                    accessToken: 'mock_access_token_' + Date.now(),
+                    refreshToken: 'mock_refresh_token_' + Date.now(),
+                    expiresAt: Date.now() + 3600000,
+                };
+
+                await this.storeTokens(tokens);
+                await this.storeSession(MOCK_USER.id, MOCK_SITE.id, MOCK_USER.role);
+
+                return {
+                    user: MOCK_USER,
+                    site: MOCK_SITE,
+                    tokens
+                };
+            }
+
             throw new Error(apiError.message || 'Giriş başarısız');
         }
     }
@@ -102,6 +181,22 @@ class AuthService {
         block: string,
         apartment: string
     ): Promise<User | null> {
+        if (config.features.enableMockAuth) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            return {
+                id: 'u_' + Date.now(),
+                siteId,
+                username,
+                name,
+                role: UserRole.RESIDENT,
+                avatar: '',
+                apartment: `${block} Blok D:${apartment}`,
+                balance: 0,
+                household: [],
+                licensePlates: []
+            };
+        }
+
         try {
             const response = await apiService.post<User>('/auth/register', {
                 name,
@@ -127,6 +222,14 @@ class AuthService {
      * Refreshes the access token using the refresh token
      */
     async refreshAccessToken(): Promise<AuthTokens | null> {
+        if (config.features.enableMockAuth) {
+            return {
+                accessToken: 'mock_access_token_' + Date.now(),
+                refreshToken: 'mock_refresh_token_' + Date.now(),
+                expiresAt: Date.now() + 3600000,
+            };
+        }
+
         const storedTokens = await this.getStoredTokens();
         if (!storedTokens) return null;
 
@@ -161,6 +264,17 @@ class AuthService {
      * Validates if the current session is valid
      */
     async validateSession(): Promise<{ user: User; site: Site } | null> {
+        if (config.features.enableMockAuth) {
+            const tokens = await this.getStoredTokens();
+            if (tokens) return { user: MOCK_USER, site: MOCK_SITE };
+            // Check session storage
+            const sessionStr = localStorage.getItem(SESSION_STORAGE_KEY);
+            if (sessionStr) {
+                return { user: MOCK_USER, site: MOCK_SITE };
+            }
+            return null;
+        }
+
         const tokens = await this.getStoredTokens();
         if (!tokens) return null;
 
@@ -204,7 +318,9 @@ class AuthService {
 
         // Try to invalidate token on backend
         try {
-            await apiService.post('/auth/logout');
+            if (!config.features.enableMockAuth) {
+                await apiService.post('/auth/logout');
+            }
         } catch {
             // Ignore errors during logout
         }

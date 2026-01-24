@@ -222,6 +222,7 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
                 return true;
             }
             showToast('Kullanıcı adı veya şifre hatalı.', 'error');
+            setIsLoading(false);
             return false;
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Hata oluştu.';
