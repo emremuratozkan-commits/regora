@@ -2,8 +2,8 @@
 import { Site, User, Ticket, Transaction, Announcement, ForumPost, ServiceLog, UserRole, ActivityLog, GlobalStats, Property } from '../types';
 import { MOCK_SITES, MOCK_USER, MOCK_TICKETS, MOCK_TRANSACTIONS, MOCK_ANNOUNCEMENTS, MOCK_FORUM_POSTS, MOCK_SERVICE_LOGS } from '../constants';
 
-const DB_KEY = 'akrona_db_v3';
-const SESSION_KEY = 'akrona_session_v3';
+const DB_KEY = 'regora_db_v3';
+const SESSION_KEY = 'regora_session_v3';
 
 interface DatabaseSchema {
   sites: Site[];
@@ -28,8 +28,8 @@ const getInitialData = (): DatabaseSchema => {
     id: 'admin_1',
     siteId: 's1',
     username: 'admin',
-    name: 'ÅKRONA Yönetim',
-    avatar: 'https://ui-avatars.com/api/?name=AKRONA&background=000&color=fff',
+    name: 'REGORA Yönetim',
+    avatar: 'https://ui-avatars.com/api/?name=REGORA&background=000&color=fff',
     role: UserRole.ADMIN,
     apartment: 'Genel Merkez',
     status: 'active',
@@ -38,22 +38,22 @@ const getInitialData = (): DatabaseSchema => {
   };
 
   const residentUser: User = {
-      ...MOCK_USER,
-      siteId: 's1',
-      username: 'akrona_user',
-      status: 'active',
-      block: 'A',
-      apartment: '104',
-      phoneNumber: '5551234567'
+    ...MOCK_USER,
+    siteId: 's1',
+    username: 'regora_user',
+    status: 'active',
+    block: 'A',
+    apartment: '104',
+    phoneNumber: '5551234567'
   };
 
   return {
     sites: MOCK_SITES,
     users: [residentUser, adminUser],
-    tickets: MOCK_TICKETS.map(t => ({...t, siteId: 's1', userId: 'u1'})),
-    transactions: MOCK_TRANSACTIONS.map(t => ({...t, userId: 'u1'})),
-    announcements: MOCK_ANNOUNCEMENTS.map(a => ({...a, siteId: 's1'})),
-    forumPosts: MOCK_FORUM_POSTS.map(f => ({...f, siteId: 's1'})),
+    tickets: MOCK_TICKETS.map(t => ({ ...t, siteId: 's1', userId: 'u1' })),
+    transactions: MOCK_TRANSACTIONS.map(t => ({ ...t, userId: 'u1' })),
+    announcements: MOCK_ANNOUNCEMENTS.map(a => ({ ...a, siteId: 's1' })),
+    forumPosts: MOCK_FORUM_POSTS.map(f => ({ ...f, siteId: 's1' })),
     serviceLogs: MOCK_SERVICE_LOGS,
     activityLogs: []
   };
@@ -105,32 +105,32 @@ class DatabaseService {
   }
 
   async register(name: string, username: string, phoneNumber: string, siteId: string, block: string, apartment: string): Promise<User | null> {
-      if (this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-          throw new Error('Bu kullanıcı adı zaten alınmış.');
-      }
-      const newUser: User = {
-          id: `u_${Date.now()}`,
-          siteId: siteId,
-          username: username,
-          name: name,
-          phoneNumber: phoneNumber,
-          avatar: `https://ui-avatars.com/api/?name=${name}&background=000&color=fff`,
-          role: UserRole.RESIDENT,
-          block: block,
-          apartment: apartment,
-          status: 'pending',
-          balance: 0,
-          household: []
-      };
-      this.data.users.push(newUser);
-      this.save();
-      return newUser;
+    if (this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+      throw new Error('Bu kullanıcı adı zaten alınmış.');
+    }
+    const newUser: User = {
+      id: `u_${Date.now()}`,
+      siteId: siteId,
+      username: username,
+      name: name,
+      phoneNumber: phoneNumber,
+      avatar: `https://ui-avatars.com/api/?name=${name}&background=000&color=fff`,
+      role: UserRole.RESIDENT,
+      block: block,
+      apartment: apartment,
+      status: 'pending',
+      balance: 0,
+      household: []
+    };
+    this.data.users.push(newUser);
+    this.save();
+    return newUser;
   }
 
   async login(username: string): Promise<{ user: User, site: Site } | null> {
     const user = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (!user) return null;
-    if (user.status === 'pending') throw new Error('Hesabınız ÅKRONA yönetici onayı beklemektedir.');
+    if (user.status === 'pending') throw new Error('Hesabınız REGORA yönetici onayı beklemektedir.');
     if (user.status === 'rejected') throw new Error('Üyelik başvurunuz reddedilmiştir.');
     const site = this.data.sites.find(s => s.id === user.siteId);
     if (!site) return null;
@@ -138,20 +138,20 @@ class DatabaseService {
   }
 
   async getPendingUsers(siteId: string): Promise<User[]> {
-      return this.data.users.filter(u => u.siteId === siteId && u.status === 'pending');
+    return this.data.users.filter(u => u.siteId === siteId && u.status === 'pending');
   }
 
   async approveUser(userId: string): Promise<void> {
-      const user = this.data.users.find(u => u.id === userId);
-      if (user) {
-          user.status = 'active';
-          this.save();
-      }
+    const user = this.data.users.find(u => u.id === userId);
+    if (user) {
+      user.status = 'active';
+      this.save();
+    }
   }
 
   async rejectUser(userId: string): Promise<void> {
-      this.data.users = this.data.users.filter(u => u.id !== userId);
-      this.save();
+    this.data.users = this.data.users.filter(u => u.id !== userId);
+    this.save();
   }
 
   async getGlobalStats(siteId: string): Promise<GlobalStats> {
@@ -159,8 +159,8 @@ class DatabaseService {
     const siteUsers = this.data.users.filter(u => u.siteId === siteId && u.status === 'active');
     const activeTickets = siteTickets.filter(t => t.status !== 'resolved').length;
     const totalResidents = siteUsers.reduce((acc, u) => acc + 1 + (u.household?.length || 0), 0);
-    const monthlyIncome = 85000; 
-    const monthlyExpense = 42000; 
+    const monthlyIncome = 85000;
+    const monthlyExpense = 42000;
     const totalBalance = 320000;
     const collectionRate = 92;
     return { taxiCount: 15, guestCount: 42, totalBalance, monthlyIncome, monthlyExpense, activeTickets, collectionRate, totalResidents, averageRating: 4.8 };

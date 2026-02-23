@@ -20,24 +20,24 @@ const AppContent: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-dark-bg text-white">
         <div className="animate-fade-in flex flex-col items-center">
-            {/* AKRONA Logo Loading */}
-            <div className="w-24 h-24 mb-8 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-white/5">
-                <span className="material-symbols-rounded text-6xl text-black font-variation-filled">lock</span>
-            </div>
-            <h1 className="text-4xl font-bold text-white tracking-[0.3em] uppercase">ÅKRONA</h1>
-            <p className="font-medium tracking-[0.2em] text-[10px] text-gray-600 uppercase mt-4">Architectural SuperApp</p>
+          {/* REGORA Logo Loading */}
+          <div className="w-24 h-24 mb-8 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-white/5">
+            <span className="material-symbols-rounded text-6xl text-black font-variation-filled">lock</span>
+          </div>
+          <h1 className="text-4xl font-bold text-white tracking-[0.3em] uppercase">REGORA</h1>
+          <p className="font-medium tracking-[0.2em] text-[10px] text-gray-600 uppercase mt-4">Architectural SuperApp</p>
         </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-      return (
-          <>
-            <UIOverlay />
-            <Login />
-          </>
-      );
+    return (
+      <>
+        <UIOverlay />
+        <Login />
+      </>
+    );
   }
 
   const renderContent = () => {
@@ -46,7 +46,7 @@ const AppContent: React.FC = () => {
       case 'finance': return <Finance />;
       case 'services': return <Services />;
       case 'community': return <Community />;
-      case 'admin': 
+      case 'admin':
         return hasPermission(AppPermission.VIEW_ADMIN_DASHBOARD) ? <AdminDashboard /> : <Dashboard />;
       default: return <Dashboard />;
     }

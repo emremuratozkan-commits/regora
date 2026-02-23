@@ -1,5 +1,5 @@
 /**
- * ÅKRONA Backend Server
+ * REGORA Backend Server
  * Express.js entry point
  */
 
@@ -45,7 +45,7 @@ const server = app.listen(config.port, () => {
     console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🏢 ÅKRONA AI Proxy Backend                              ║
+ ║   🏢 REGORA AI Proxy Backend                              ║
 ║   ─────────────────────────────────────                   ║
 ║   Server running on port ${config.port.toString().padEnd(27)}  ║
 ║   Environment: ${config.nodeEnv.padEnd(36)}  ║

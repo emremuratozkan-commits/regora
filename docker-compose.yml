@@ -1,21 +1,21 @@
-# ÅKRONA Development Environment
+# REGORA Development Environment
 # Usage: docker-compose up -d
 
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: akrona-postgres
+    container_name: regora-postgres
     environment:
-      POSTGRES_USER: akrona
-      POSTGRES_PASSWORD: akrona_dev_password
-      POSTGRES_DB: akrona_dev
+      POSTGRES_USER: regora
+      POSTGRES_PASSWORD: regora_dev_password
+      POSTGRES_DB: regora_dev
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U akrona -d akrona_dev"]
+      test: [ "CMD-SHELL", "pg_isready -U regora -d regora_dev" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,13 +23,13 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: akrona-redis
+    container_name: regora-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,7 +37,7 @@ services:
   # Database Admin UI
   adminer:
     image: adminer:latest
-    container_name: akrona-adminer
+    container_name: regora-adminer
     ports:
       - "8080:8080"
     depends_on:
@@ -49,11 +49,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: builder
-    container_name: akrona-backend
+    container_name: regora-backend
     command: npm run dev
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://akrona:akrona_dev_password@postgres:5432/akrona_dev
+      DATABASE_URL: postgresql://regora:regora_dev_password@postgres:5432/regora_dev
       REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-jwt-secret-change-in-production
       GEMINI_API_KEY: ${GEMINI_API_KEY}
@@ -72,7 +72,7 @@ services:
   # Frontend (development mode with hot reload)
   frontend:
     image: node:20-alpine
-    container_name: akrona-frontend
+    container_name: regora-frontend
     working_dir: /app
     command: sh -c "npm install && npm run dev -- --host"
     environment:
@@ -90,6 +90,7 @@ volumes:
   postgres_data:
   redis_data:
 
+
 networks:
   default:
-    name: akrona-network
+    name: regora-network

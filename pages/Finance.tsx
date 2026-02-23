@@ -118,7 +118,7 @@ const Finance: React.FC = () => {
                             <span className="material-symbols-rounded text-black text-xl">auto_awesome</span>
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-xs font-bold text-white tracking-widest uppercase mb-2">ÅKRONA AI ANALİZ</h3>
+                            <h3 className="text-xs font-bold text-white tracking-widest uppercase mb-2">REGORA AI ANALİZ</h3>
                             {isAnalyzing ? (
                                 <p className="text-xs text-gray-500 animate-pulse">Finansal veriler analiz ediliyor...</p>
                             ) : aiInsight ? (

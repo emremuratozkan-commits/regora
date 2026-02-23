@@ -1,12 +1,12 @@
 #!/bin/bash
-# ÅKRONA Database Restore Script
+# REGORA Database Restore Script
 # Usage: ./restore.sh <backup_file_or_s3_key>
 
 set -euo pipefail
 
 BACKUP_SOURCE="${1:-}"
-BACKUP_DIR="/opt/akrona/backups"
-S3_BUCKET="${S3_BACKUP_BUCKET:-akrona-backups}"
+BACKUP_DIR="/opt/regora/backups"
+S3_BUCKET="${S3_BACKUP_BUCKET:-regora-backups}"
 
 # Colors
 RED='\033[0;31m'
@@ -31,8 +31,8 @@ if [ -z "$BACKUP_SOURCE" ]; then
     echo "Usage: $0 <backup_file_or_s3_key>"
     echo ""
     echo "Examples:"
-    echo "  $0 /opt/akrona/backups/akrona_20240115_120000.sql.gz"
-    echo "  $0 akrona_20240115_120000.sql.gz  # Downloads from S3"
+    echo "  $0 /opt/regora/backups/regora_20240115_120000.sql.gz"
+    echo "  $0 regora_20240115_120000.sql.gz  # Downloads from S3"
     echo ""
     echo "Available local backups:"
     ls -lh "$BACKUP_DIR"/*.sql.gz 2>/dev/null || echo "  (none)"
@@ -55,11 +55,11 @@ fi
 log "Using backup file: $BACKUP_FILE"
 
 # Load environment
-source /opt/akrona/.env.production 2>/dev/null || true
+source /opt/regora/.env.production 2>/dev/null || true
 
 DB_HOST="${POSTGRES_HOST:-postgres}"
-DB_NAME="${POSTGRES_DB:-akrona}"
-DB_USER="${POSTGRES_USER:-akrona}"
+DB_NAME="${POSTGRES_DB:-regora}"
+DB_USER="${POSTGRES_USER:-regora}"
 export PGPASSWORD="${POSTGRES_PASSWORD:-}"
 
 # Confirmation
@@ -83,7 +83,7 @@ docker-compose -f docker-compose.prod.yml stop backend || true
 
 # Restore database
 log "Restoring database from backup..."
-zcat "$BACKUP_FILE" | docker exec -i akrona-postgres-prod pg_restore \
+zcat "$BACKUP_FILE" | docker exec -i regora-postgres-prod pg_restore \
     -U "$DB_USER" \
     -d "$DB_NAME" \
     --clean \
@@ -111,6 +111,6 @@ log "✅ Database restore completed successfully!"
 if [ -n "${SLACK_WEBHOOK:-}" ]; then
     curl -s -X POST "$SLACK_WEBHOOK" \
         -H 'Content-type: application/json' \
-        --data "{\"text\":\"⚠️ ÅKRONA database restore completed from: $BACKUP_SOURCE\"}" \
+        --data "{\"text\":\"⚠️ REGORA database restore completed from: $BACKUP_SOURCE\"}" \
         || true
 fi

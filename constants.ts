@@ -22,7 +22,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
 export const MOCK_SITES: Site[] = [
   { 
     id: 's1', 
-    name: 'ÅKRONA Heights', 
+    name: 'REGORA Heights', 
     address: 'Zincirlikuyu Cad. No:1, Levent', 
     city: 'İstanbul', 
     managerName: 'Mehmet Aksoy', 
@@ -34,7 +34,7 @@ export const MOCK_SITES: Site[] = [
   },
   { 
     id: 's2', 
-    name: 'ÅKRONA Marine Plaza', 
+    name: 'REGORA Marine Plaza', 
     address: 'Karaköy Rıhtım No:12', 
     city: 'İstanbul', 
     managerName: 'Esra Yıldız', 
@@ -49,7 +49,7 @@ export const MOCK_SITES: Site[] = [
 export const MOCK_USER: User = {
   id: 'u1',
   siteId: 's1',
-  username: 'akrona_user',
+  username: 'regora_user',
   name: 'Can Dağdelen',
   avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
   role: UserRole.RESIDENT,
@@ -61,8 +61,8 @@ export const MOCK_USER: User = {
 };
 
 export const MOCK_BANK_DETAILS: BankDetails = {
-  bankName: 'ÅKRONA Finans',
-  accountHolder: 'ÅKRONA Mülk Yönetimi A.Ş.',
+  bankName: 'REGORA Finans',
+  accountHolder: 'REGORA Mülk Yönetimi A.Ş.',
   iban: 'TR00 0001 2024 0000 0055 6677 88'
 };
 
@@ -79,7 +79,7 @@ export const ALL_SERVICES: ServiceItem[] = [
   { 
     id: 's2', 
     key: 'has_gym', 
-    title: 'Akrona Wellness', 
+    title: 'Regora Wellness', 
     description: '7/24 Aktif', 
     icon: 'fitness_center', 
     color: 'text-white',

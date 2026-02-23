@@ -1,6 +1,6 @@
-# ÅKRONA Deployment Guide
+# REGORA Deployment Guide
 
-Complete guide for deploying ÅKRONA to production.
+Complete guide for deploying REGORA to production.
 
 ## 📋 Table of Contents
 
@@ -18,8 +18,8 @@ Complete guide for deploying ÅKRONA to production.
 
 ```bash
 # 1. Clone and configure
-git clone https://github.com/your-org/akrona.git
-cd akrona
+git clone https://github.com/your-org/regora.git
+cd regora
 cp .env.example .env
 
 # 2. Start development environment
@@ -158,7 +158,7 @@ Configure in GitHub → Settings → Variables:
 ```
 VITE_API_URL=https://api.yourdomain.com
 SENTRY_ORG=your-org
-SENTRY_PROJECT=akrona
+SENTRY_PROJECT=regora
 ```
 
 ### Manual Deployment
@@ -217,20 +217,20 @@ curl http://localhost:3001/metrics
 Add to crontab:
 ```bash
 # Daily at 3 AM
-0 3 * * * /opt/akrona/scripts/backup.sh daily-$(date +\%Y\%m\%d)
+0 3 * * * /opt/regora/scripts/backup.sh daily-$(date +\%Y\%m\%d)
 
 # Weekly on Sunday at 4 AM
-0 4 * * 0 /opt/akrona/scripts/backup.sh weekly-$(date +\%Y\%m\%d)
+0 4 * * 0 /opt/regora/scripts/backup.sh weekly-$(date +\%Y\%m\%d)
 ```
 
 ### Restore from Backup
 
 ```bash
 # List available backups
-ls -la /opt/akrona/backups/
+ls -la /opt/regora/backups/
 
 # Restore
-./scripts/restore.sh akrona_20240115_120000.sql.gz
+./scripts/restore.sh regora_20240115_120000.sql.gz
 ```
 
 ### S3 Backup Configuration
@@ -240,7 +240,7 @@ Add to `.env.production`:
 AWS_ACCESS_KEY_ID=your_key
 AWS_SECRET_ACCESS_KEY=your_secret
 AWS_REGION=eu-central-1
-S3_BACKUP_BUCKET=akrona-backups
+S3_BACKUP_BUCKET=regora-backups
 ```
 
 ---
@@ -264,7 +264,7 @@ docker-compose ps postgres
 docker-compose logs postgres
 
 # Connect manually
-docker exec -it akrona-postgres psql -U akrona -d akrona
+docker exec -it regora-postgres psql -U regora -d regora
 ```
 
 **Migrations failed:**

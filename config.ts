@@ -61,7 +61,7 @@ export const config: AppConfig = {
     security: {
         sessionEncryptionKey: getEnvVar(
             'VITE_SESSION_ENCRYPTION_KEY',
-            'akrona-default-key-change-in-production'
+            'regora-default-key-change-in-production'
         ),
         tokenExpiryMinutes: getEnvNumber('VITE_TOKEN_EXPIRY_MINUTES', 15),
         refreshTokenExpiryDays: getEnvNumber('VITE_REFRESH_TOKEN_EXPIRY_DAYS', 7)

@@ -10,7 +10,7 @@ const PBKDF2_ITERATIONS = 100000;
 
 class CryptoService {
     private keyCache: CryptoKey | null = null;
-    private readonly storageKey = 'akrona_session_key';
+    private readonly storageKey = 'regora_session_key';
 
     /**
      * Derives an AES-256 key from the given password using PBKDF2
@@ -46,7 +46,7 @@ class CryptoService {
         if (this.keyCache) return this.keyCache;
 
         // Use a combination of environment variable and random salt for key derivation
-        const baseKey = import.meta.env.VITE_SESSION_ENCRYPTION_KEY || 'akrona-default-key-change-in-production';
+        const baseKey = import.meta.env.VITE_SESSION_ENCRYPTION_KEY || 'regora-default-key-change-in-production';
 
         // Check if we have a stored salt
         let storedSalt = localStorage.getItem(this.storageKey);

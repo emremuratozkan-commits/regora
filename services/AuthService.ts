@@ -37,13 +37,13 @@ export interface RegisterRequest {
     apartment: string;
 }
 
-const AUTH_STORAGE_KEY = 'akrona_auth_tokens';
-const SESSION_STORAGE_KEY = 'akrona_session_v3';
+const AUTH_STORAGE_KEY = 'regora_auth_tokens';
+const SESSION_STORAGE_KEY = 'regora_session_v3';
 
 // Mock Data
 const MOCK_SITE: Site = {
     id: 's_demo',
-    name: 'Akrona Residence',
+    name: 'Regora Residence',
     address: 'Bağdat Caddesi No: 123',
     city: 'İstanbul',
     managerName: 'Ahmet Yılmaz',

@@ -1,13 +1,13 @@
 #!/bin/bash
-# ÅKRONA Database Backup Script
+# REGORA Database Backup Script
 # Usage: ./backup.sh [backup_name]
 
 set -euo pipefail
 
 # Configuration
 BACKUP_NAME="${1:-$(date +%Y%m%d_%H%M%S)}"
-BACKUP_DIR="/opt/akrona/backups"
-S3_BUCKET="${S3_BACKUP_BUCKET:-akrona-backups}"
+BACKUP_DIR="/opt/regora/backups"
+S3_BUCKET="${S3_BACKUP_BUCKET:-regora-backups}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-30}"
 
 # Colors for output
@@ -36,21 +36,21 @@ log "Starting backup: $BACKUP_NAME"
 
 # Get database credentials from environment or docker-compose
 if [ -z "${DATABASE_URL:-}" ]; then
-    source /opt/akrona/.env.production 2>/dev/null || true
+    source /opt/regora/.env.production 2>/dev/null || true
 fi
 
 # Extract connection details
 DB_HOST="${POSTGRES_HOST:-postgres}"
 DB_PORT="${POSTGRES_PORT:-5432}"
-DB_NAME="${POSTGRES_DB:-akrona}"
-DB_USER="${POSTGRES_USER:-akrona}"
+DB_NAME="${POSTGRES_DB:-regora}"
+DB_USER="${POSTGRES_USER:-regora}"
 export PGPASSWORD="${POSTGRES_PASSWORD:-}"
 
-BACKUP_FILE="$BACKUP_DIR/akrona_${BACKUP_NAME}.sql.gz"
+BACKUP_FILE="$BACKUP_DIR/regora_${BACKUP_NAME}.sql.gz"
 
 # Create PostgreSQL backup
 log "Creating PostgreSQL dump..."
-docker exec akrona-postgres-prod pg_dump \
+docker exec regora-postgres-prod pg_dump \
     -U "$DB_USER" \
     -d "$DB_NAME" \
     --format=custom \
@@ -73,7 +73,7 @@ fi
 
 # Clean up old backups locally
 log "Cleaning up backups older than $RETENTION_DAYS days..."
-find "$BACKUP_DIR" -name "akrona_*.sql.gz" -mtime +$RETENTION_DAYS -delete 2>/dev/null || true
+find "$BACKUP_DIR" -name "regora_*.sql.gz" -mtime +$RETENTION_DAYS -delete 2>/dev/null || true
 
 # Clean up old backups in S3
 if command -v aws &> /dev/null && [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
@@ -98,7 +98,7 @@ log "✅ Backup completed successfully: $BACKUP_NAME"
 if [ -n "${SLACK_WEBHOOK:-}" ]; then
     curl -s -X POST "$SLACK_WEBHOOK" \
         -H 'Content-type: application/json' \
-        --data "{\"text\":\"✅ ÅKRONA backup completed: $BACKUP_NAME ($BACKUP_SIZE)\"}" \
+        --data "{\"text\":\"✅ REGORA backup completed: $BACKUP_NAME ($BACKUP_SIZE)\"}" \
         || warn "Slack notification failed"
 fi
 

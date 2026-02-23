@@ -1,5 +1,5 @@
 /**
- * Type definitions for ÅKRONA Backend
+ * Type definitions for REGORA Backend
  */
 
 export interface TokenPayload {

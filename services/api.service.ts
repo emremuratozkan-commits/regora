@@ -27,7 +27,7 @@ export interface ApiError {
 }
 
 // Token storage key
-const AUTH_STORAGE_KEY = 'akrona_auth_tokens';
+const AUTH_STORAGE_KEY = 'regora_auth_tokens';
 
 // Token refresh promise to prevent multiple refresh calls
 let refreshPromise: Promise<string | null> | null = null;

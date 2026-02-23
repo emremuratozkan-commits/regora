@@ -10,7 +10,7 @@ import userService from '../services/user.service';
 
 declare global {
     interface Window {
-        akronaCLI: {
+        regoraCLI: {
             help: () => void;
             theme: (color: ThemeAccent) => void;
         };
@@ -237,7 +237,7 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
         try {
             const newUser = await authService.register(name, username, phoneNumber, siteId, block, apartment);
             if (newUser) {
-                showToast('Başvuru alındı. ÅKRONA onayı bekleniyor.', 'success');
+                showToast('Başvuru alındı. REGORA onayı bekleniyor.', 'success');
                 setIsLoading(false);
                 return true;
             }

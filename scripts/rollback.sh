@@ -1,5 +1,5 @@
 #!/bin/bash
-# ÅKRONA Rollback Script
+# REGORA Rollback Script
 # Rolls back to the previous deployment version
 
 set -euo pipefail
@@ -13,7 +13,7 @@ error() {
     exit 1
 }
 
-cd /opt/akrona
+cd /opt/regora
 
 # Check if previous version exists
 if [ ! -f .previous-version ]; then
@@ -26,8 +26,8 @@ CURRENT_VERSION=$(cat .current-version 2>/dev/null || echo "unknown")
 log "Rolling back from $CURRENT_VERSION to $PREVIOUS_VERSION"
 
 # Tag previous as current
-docker tag "ghcr.io/$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/frontend:$PREVIOUS_VERSION" akrona-frontend:current
-docker tag "ghcr.io/$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/backend:$PREVIOUS_VERSION" akrona-backend:current
+docker tag "ghcr.io/$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/frontend:$PREVIOUS_VERSION" regora-frontend:current
+docker tag "ghcr.io/$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/backend:$PREVIOUS_VERSION" regora-backend:current
 
 # Restart services
 log "Restarting services with previous version..."
@@ -47,5 +47,5 @@ log "✅ Rollback to $PREVIOUS_VERSION completed successfully!"
 if [ -n "${SLACK_WEBHOOK:-}" ]; then
     curl -s -X POST "$SLACK_WEBHOOK" \
         -H 'Content-type: application/json' \
-        --data "{\"text\":\"⚠️ ÅKRONA rolled back from $CURRENT_VERSION to $PREVIOUS_VERSION\"}"
+        --data "{\"text\":\"⚠️ REGORA rolled back from $CURRENT_VERSION to $PREVIOUS_VERSION\"}"
 fi
