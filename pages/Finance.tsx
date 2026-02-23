@@ -5,6 +5,7 @@ import Card from '../components/Card';
 import { MOCK_TRANSACTIONS } from '../constants';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { AppPermission } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const siteIncomeExpenseData = [
     { name: 'Oca', gelir: 45000, gider: 32000 },
@@ -16,7 +17,8 @@ const siteIncomeExpenseData = [
 ];
 
 const Finance: React.FC = () => {
-    const { user, openModal, showToast, hasPermission } = useApp();
+    const { user, openModal, showToast, hasPermission, globalStats, property } = useApp();
+    const { t } = useTranslation();
     const totalDebt = Math.abs(user.balance);
 
     const [activeFilter, setActiveFilter] = useState<'all' | 'dues' | 'utility'>('all');
@@ -26,10 +28,10 @@ const Finance: React.FC = () => {
     const handlePay = (amount: number, description: string) => {
         openModal({
             type: 'PAYMENT',
-            title: 'Güvenli Ödeme Terminali',
+            title: t('finance.safe_payment'),
             data: { amount, description },
             onConfirm: () => {
-                showToast('Ödeme işlemi başarıyla tamamlandı.', 'success');
+                showToast(t('finance.payment_success'), 'success');
             }
         });
     };
@@ -65,15 +67,15 @@ const Finance: React.FC = () => {
             <div className="space-y-8 animate-fade-in pb-24">
                 <div className="px-2">
                     <h1 className="text-2xl font-bold text-white tracking-tight">Kurumsal Finans</h1>
-                    <p className="text-gray-500 text-xs tracking-widest uppercase mt-1">Site Bütçe ve Tahsilat Raporu</p>
+                    <p className="text-gray-500 text-xs tracking-widest uppercase mt-1">{property.name} Raporu</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <Card gradient className="col-span-2 border-white/10">
                         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Kasa Bakiyesi</p>
-                        <h2 className="text-4xl font-bold text-white">₺320.000</h2>
+                        <h2 className="text-4xl font-bold text-white">₺{globalStats.totalBalance.toLocaleString('tr-TR')}</h2>
                         <div className="mt-4 flex gap-4 text-[10px] font-bold">
-                            <span className="text-green-500">AYLIK GELİR: ₺85.000</span>
-                            <span className="text-red-500">AYLIK GİDER: ₺42.000</span>
+                            <span className="text-green-500">AYLIK GELİR: ₺{globalStats.monthlyIncome.toLocaleString('tr-TR')}</span>
+                            <span className="text-red-500">AYLIK GİDER: ₺{globalStats.monthlyExpense.toLocaleString('tr-TR')}</span>
                         </div>
                     </Card>
                 </div>
@@ -94,41 +96,54 @@ const Finance: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-fade-in pb-24">
-            <div className="px-2">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Cari Hesap</h1>
-                <p className="text-gray-500 text-xs tracking-widest uppercase mt-1">Mülk Finansal Durumu</p>
+            <div className="flex justify-between items-center px-1">
+                <h1 className="text-2xl font-bold text-white tracking-tight">{t('finance.title')}</h1>
             </div>
 
-            <Card gradient className="border-white/10">
-                <div className="text-center py-4">
-                    <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-2">Toplam Cari Borç</p>
-                    <h2 className="text-5xl font-bold text-white tracking-tighter">₺{totalDebt.toLocaleString()}</h2>
-                    <div className="mt-8 flex gap-3">
-                        <button onClick={() => handlePay(totalDebt, 'Tüm Borç Kapatma')} className="flex-1 bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-2xl transition-all active:scale-95 text-[10px] uppercase tracking-widest">
-                            ÖDEME YAP
-                        </button>
+            <div className="grid grid-cols-1 gap-4">
+                <Card gradient className="border-white/10 shadow-2xl shadow-black/50">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-2">{t('finance.total_debt')}</p>
+                            <h2 className="text-4xl font-bold text-white tracking-tighter">₺{totalDebt.toLocaleString('tr-TR')}</h2>
+                        </div>
+                        <div className="bg-white/10 p-3 rounded-2xl">
+                            <span className="material-symbols-rounded text-white">account_balance_wallet</span>
+                        </div>
                     </div>
-                </div>
-            </Card>
 
-            <div className="px-2">
-                <Card gradient className="border-white/5">
-                    <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-rounded text-black text-xl">auto_awesome</span>
+                    <button
+                        onClick={() => handlePay(totalDebt, 'Toplam Aidat Borcu Ödemesi')}
+                        className="w-full bg-white text-black font-extrabold py-4 rounded-2xl shadow-xl shadow-white/5 text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all"
+                    >
+                        {t('finance.pay_now')}
+                    </button>
+
+                    <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <span className="material-symbols-rounded text-sm text-gold-500">psychology</span>
+                                {t('finance.analysis')}
+                            </h3>
+                            <button
+                                onClick={handleAnalyzeFinances}
+                                disabled={isAnalyzing}
+                                className="text-[10px] font-bold text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors border border-white/5"
+                            >
+                                {isAnalyzing ? t('finance.analyzing') : t('finance.analyze_btn')}
+                            </button>
                         </div>
-                        <div className="flex-1">
-                            <h3 className="text-xs font-bold text-white tracking-widest uppercase mb-2">REGORA AI ANALİZ</h3>
-                            {isAnalyzing ? (
-                                <p className="text-xs text-gray-500 animate-pulse">Finansal veriler analiz ediliyor...</p>
-                            ) : aiInsight ? (
-                                <p className="text-xs text-gray-300 leading-relaxed italic">"{aiInsight}"</p>
-                            ) : (
-                                <button onClick={handleAnalyzeFinances} className="text-white text-[10px] font-bold border border-white/20 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                                    Analiz Raporu Al
-                                </button>
-                            )}
-                        </div>
+                        {isAnalyzing ? (
+                            <p className="text-xs text-gray-500 animate-pulse">{t('finance.analyzing')}</p>
+                        ) : aiInsight ? (
+                            <p className="text-xs text-gray-300 leading-relaxed italic">"{aiInsight}"</p>
+                        ) : (
+                            // This button is now redundant as it's moved into the flex container above
+                            // <button onClick={handleAnalyzeFinances} className="text-white text-[10px] font-bold border border-white/20 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                            //     Analiz Raporu Al
+                            // </button>
+                            null
+                        )}
                     </div>
                 </Card>
             </div>
@@ -138,7 +153,7 @@ const Finance: React.FC = () => {
                     <h3 className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Hesap Ekstresi</h3>
                     <div className="flex gap-2">
                         {['all', 'dues', 'utility'].map(f => (
-                            <button key={f} onClick={() => setActiveFilter(f as any)} className={`text-[10px] font-bold px-3 py-1 rounded-full transition-all ${activeFilter === f ? 'bg-white text-black' : 'bg-dark-surface text-gray-500 border border-dark-border'}`}>
+                            <button key={f} onClick={() => setActiveFilter(f as any)} className={`text-[10px] font-bold px-4 py-2 rounded-2xl transition-all ${activeFilter === f ? 'bg-white text-black' : 'bg-dark-surface text-gray-500 border border-dark-border'}`}>
                                 {f === 'all' ? 'Tümü' : f === 'dues' ? 'Aidat' : 'Fatura'}
                             </button>
                         ))}

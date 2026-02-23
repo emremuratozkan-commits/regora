@@ -54,7 +54,7 @@ function getEnvBoolean(key: string, defaultValue: boolean): boolean {
  */
 export const config: AppConfig = {
     api: {
-        url: getEnvVar('VITE_API_URL', 'http://localhost:3001'),
+        url: getEnvVar('VITE_API_URL', 'http://localhost:4001'),
         timeout: getEnvNumber('VITE_API_TIMEOUT', 30000)
     },
 

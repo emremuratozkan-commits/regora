@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { AppPermission } from '../types';
+import { AppPermission, UserRole } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface TabBarProps {
   activeTab: string;
@@ -9,41 +10,54 @@ interface TabBarProps {
 }
 
 const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
-  const { hasPermission } = useApp();
+  const { hasPermission, user } = useApp();
+  const { t } = useTranslation();
+
+  const isStaffOrAdmin = user.role === UserRole.SUPER_ADMIN || user.role === UserRole.MANAGER || user.role === UserRole.STAFF;
 
   const tabs = [
-    { id: 'dashboard', icon: 'grid_view', label: 'ÖZET' },
-    { id: 'finance', icon: 'account_balance_wallet', label: 'FİNANS' },
-    ...(hasPermission(AppPermission.VIEW_ADMIN_DASHBOARD) 
-        ? [{ id: 'admin', icon: 'shield_person', label: 'YÖNETİM' }] 
-        : []
+    ...(isStaffOrAdmin ? [] : [{ id: 'dashboard', icon: 'grid_view', label: t('tabbar.dashboard') }]),
+    ...(hasPermission(AppPermission.VIEW_PERSONAL_FINANCE) || hasPermission(AppPermission.VIEW_SITE_FINANCE)
+      ? [{ id: 'finance', icon: 'account_balance_wallet', label: t('tabbar.finance') }]
+      : []
     ),
-    { id: 'services', icon: 'concierge', label: 'HİZMET' },
-    { id: 'community', icon: 'public', label: 'YAŞAM' },
+    ...(hasPermission(AppPermission.VIEW_ADMIN_DASHBOARD) || isStaffOrAdmin
+      ? [{ id: 'admin', icon: 'shield_person', label: t('tabbar.admin') }]
+      : []
+    ),
+    { id: 'services', icon: 'concierge', label: t('tabbar.services') },
+    { id: 'community', icon: 'public', label: t('tabbar.community') },
+    { id: 'settings', icon: 'settings', label: t('tabbar.settings') },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl border-t border-white/5"></div>
-      <div className="relative flex justify-around items-center px-4 py-3 pb-7 max-w-md mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 z-[100] safe-area-bottom">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-3xl border-t border-white/5"></div>
+      <div className="relative flex justify-around items-center px-6 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-[430px] mx-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          
+
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center justify-center w-14 transition-all duration-300 ${
-                isActive ? 'text-white' : 'text-gray-600'
-              }`}
+              className={`flex flex-col items-center justify-center transition-all duration-300 tap-highlight-transparent ${isActive ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'
+                }`}
             >
-              <span 
-                className={`material-symbols-rounded text-2xl mb-1.5 ${isActive ? 'font-variation-filled' : ''}`}
-                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-              >
-                {tab.icon}
+              <div className="relative">
+                <span
+                  className={`material-symbols-rounded text-[26px] mb-1 ${isActive ? 'font-variation-filled' : ''}`}
+                  style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+                >
+                  {tab.icon}
+                </span>
+                {isActive && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
+                )}
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-[0.1em] mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+                {tab.label}
               </span>
-              <span className="text-[8px] font-bold tracking-[0.1em]">{tab.label}</span>
             </button>
           );
         })}

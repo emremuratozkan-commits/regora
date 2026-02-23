@@ -1,0 +1,58 @@
+/* Mobile-First Transformation Base Styles */
+
+html,
+body {
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #000000;
+    color: #ffffff;
+    /* Prevent pull-to-refresh on top of page if needed, but safe to allow pan-y */
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+}
+
+/* Base text selection control */
+.no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Better mobile inputs - prevent auto-zoom on iOS */
+input,
+select,
+textarea {
+    font-size: 16px !important;
+}
+
+/* Global button and menu selection prevention */
+button,
+nav,
+.tab-bar-item {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe Area Spacing Helpers with Defaults */
+.pb-safe {
+    padding-bottom: calc(max(1rem, env(safe-area-inset-bottom)));
+}
+
+.pt-safe {
+    padding-top: calc(max(1.5rem, env(safe-area-inset-top)));
+}
+
+.min-h-screen-safe {
+    min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+}
+
+/* Smooth transitions for mobile feel */
+.page-transition {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

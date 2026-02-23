@@ -7,7 +7,7 @@ import 'dotenv/config';
 
 export const config = {
     // Server
-    port: parseInt(process.env.PORT || '3001', 10),
+    port: parseInt(process.env.PORT || '4001', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
     isDev: process.env.NODE_ENV !== 'production',
 
@@ -28,7 +28,7 @@ export const config = {
     aiCacheTtl: parseInt(process.env.AI_CACHE_TTL || '300', 10),
 
     // CORS
-    corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3000'],
+    corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4000'],
 };
 
 export default config;

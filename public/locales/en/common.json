@@ -1,0 +1,72 @@
+{
+    "settings": {
+        "title": "Settings",
+        "app_settings": "App Settings",
+        "app_language": "App Language",
+        "notifications": "Notifications",
+        "silent_hours": "Silent Hours",
+        "silent_hours_desc": "Mute Night Notifications",
+        "announcement_notifications": "Announcement Notifications",
+        "announcement_notifications_desc": "Get News from Site",
+        "security": "Security & Access",
+        "biometrics": "FaceID / Fingerprint",
+        "biometrics_desc": "Biometric Lock",
+        "emergency_contacts": "Emergency Contacts",
+        "emergency_contacts_desc": "Manage SMS List",
+        "logout": "Logout"
+    },
+    "dashboard": {
+        "welcome": "WELCOME",
+        "dues_debt": "Dues Debt",
+        "new_announcement": "New Announcement",
+        "quick_access": "Quick Access",
+        "guest_code": "Guest Access Protocol",
+        "courier_notify": "Courier Notification",
+        "staff_call": "Staff Call",
+        "taxi_call": "Request Taxi",
+        "panic_button": "Emergency (Panic Button)",
+        "admin_panel": "ADMIN PANEL",
+        "financial_summary": "Financial Summary",
+        "budget_liquidity": "Budget & Liquidity",
+        "income": "INCOME",
+        "expense": "EXPENSE",
+        "technical_ticket": "Technical Ticket",
+        "active_resident": "Active Resident"
+    },
+    "tabbar": {
+        "dashboard": "SUMMARY",
+        "finance": "FINANCE",
+        "admin": "ADMIN",
+        "services": "SERVICES",
+        "community": "COMMUNITY",
+        "settings": "SETTINGS"
+    },
+    "finance": {
+        "title": "Dues Account",
+        "total_debt": "Total Dues Debt",
+        "pay_now": "Pay Now",
+        "safe_payment": "Secure Payment Panel",
+        "payment_success": "Payment completed successfully.",
+        "analysis": "Financial Analysis",
+        "analyzing": "Analyzing...",
+        "analyze_btn": "AI Analysis"
+    },
+    "services": {
+        "title": "Service Panel",
+        "admin_title": "Facility Management",
+        "usage_logs": "Facility Usage Records",
+        "usage_logs_desc": "Usage details for facilities and services.",
+        "add_service": "Add New Service",
+        "my_services": "My Services",
+        "technical_support": "Technical Support Line",
+        "new_ticket": "Create New Ticket",
+        "ticket_success": "Support ticket created."
+    },
+    "common": {
+        "turkish": "Turkish",
+        "english": "English",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "status_updated": "Status updated."
+    }
+}

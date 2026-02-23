@@ -2,7 +2,8 @@
 import { User, UserRole, Property, Transaction, Ticket, Announcement, AdminSiteStats, Site, ServiceItem, ForumPost, ServiceLog, Poll, BankDetails, AppPermission } from './types';
 
 export const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
-  [UserRole.ADMIN]: [
+  [UserRole.SUPER_ADMIN]: Object.values(AppPermission),
+  [UserRole.MANAGER]: [
     AppPermission.VIEW_ADMIN_DASHBOARD,
     AppPermission.MANAGE_SITE,
     AppPermission.MANAGE_FACILITIES,
@@ -10,35 +11,35 @@ export const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     AppPermission.VIEW_SITE_FINANCE,
     AppPermission.MANAGE_TICKETS
   ],
+  [UserRole.STAFF]: [
+    AppPermission.MANAGE_TICKETS
+  ],
   [UserRole.RESIDENT]: [
     AppPermission.VIEW_PERSONAL_FINANCE,
     AppPermission.CREATE_TICKETS
-  ],
-  [UserRole.TECHNICIAN]: [
-      AppPermission.MANAGE_TICKETS
   ]
 };
 
 export const MOCK_SITES: Site[] = [
-  { 
-    id: 's1', 
-    name: 'REGORA Heights', 
-    address: 'Zincirlikuyu Cad. No:1, Levent', 
-    city: 'İstanbul', 
-    managerName: 'Mehmet Aksoy', 
-    blockCount: 2, 
+  {
+    id: 's1',
+    name: 'REGORA Heights',
+    address: 'Zincirlikuyu Cad. No:1, Levent',
+    city: 'İstanbul',
+    managerName: 'Mehmet Aksoy',
+    blockCount: 2,
     unitCount: 180,
     duesAmount: 2450,
     imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
     features: { has_pool: true, has_gym: true, has_freight_elevator: true, has_parking_recognition: true, has_guest_kiosk: true }
   },
-  { 
-    id: 's2', 
-    name: 'REGORA Marine Plaza', 
-    address: 'Karaköy Rıhtım No:12', 
-    city: 'İstanbul', 
-    managerName: 'Esra Yıldız', 
-    blockCount: 1, 
+  {
+    id: 's2',
+    name: 'REGORA Marine Plaza',
+    address: 'Karaköy Rıhtım No:12',
+    city: 'İstanbul',
+    managerName: 'Esra Yıldız',
+    blockCount: 1,
     unitCount: 45,
     duesAmount: 3800,
     imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800',
@@ -67,39 +68,39 @@ export const MOCK_BANK_DETAILS: BankDetails = {
 };
 
 export const ALL_SERVICES: ServiceItem[] = [
-  { 
-    id: 's1', 
-    key: 'has_pool', 
-    title: 'Infinity Pool', 
-    description: 'Doluluk: %20', 
-    icon: 'pool', 
+  {
+    id: 's1',
+    key: 'has_pool',
+    title: 'Yüzme Havuzu',
+    description: 'Doluluk: %20',
+    icon: 'pool',
     color: 'text-white',
     action: 'Rezervasyon'
   },
-  { 
-    id: 's2', 
-    key: 'has_gym', 
-    title: 'Regora Wellness', 
-    description: '7/24 Aktif', 
-    icon: 'fitness_center', 
+  {
+    id: 's2',
+    key: 'has_gym',
+    title: 'Regora Sağlık & Fitness',
+    description: '7/24 Aktif',
+    icon: 'fitness_center',
     color: 'text-white',
     action: 'Giriş Kodu'
   },
-  { 
-    id: 's4', 
-    key: 'has_parking_recognition', 
-    title: 'Smart Parking', 
-    description: 'Otopark Yönetimi', 
-    icon: 'directions_car', 
+  {
+    id: 's4',
+    key: 'has_parking_recognition',
+    title: 'Akıllı Otopark Sistemi',
+    description: 'Plaka Tanıma Aktif',
+    icon: 'directions_car',
     color: 'text-white',
     action: 'Plaka Tanımla'
   },
-  { 
-    id: 's5', 
-    key: 'has_guest_kiosk', 
-    title: 'Concierge QR', 
-    description: 'Misafir hızlı geçiş', 
-    icon: 'qr_code_2', 
+  {
+    id: 's5',
+    key: 'has_guest_kiosk',
+    title: 'Hızlı Resepsiyon QR',
+    description: 'Misafir hızlı geçiş',
+    icon: 'qr_code_2',
     color: 'text-white',
     action: 'QR Üret'
   }
@@ -115,16 +116,16 @@ export const MOCK_UPCOMING_PAYMENTS: Transaction[] = [
 ];
 
 export const MOCK_TICKETS: Ticket[] = [
-  { 
-    id: 'tk1', 
+  {
+    id: 'tk1',
     siteId: 's1',
     userId: 'u1',
-    title: 'Akıllı Ev Paneli Sorunu', 
+    title: 'Akıllı Ev Paneli Sorunu',
     description: 'Kontrol panelinde bağlantı hatası alıyorum.',
     requestorName: 'Can Dağdelen (A-104)',
-    category: 'maintenance', 
-    status: 'in_progress', 
-    date: '1 sa önce' 
+    category: 'maintenance',
+    status: 'in_progress',
+    date: '1 sa önce'
   }
 ];
 

@@ -1,0 +1,72 @@
+{
+    "settings": {
+        "title": "Ayarlar",
+        "app_settings": "Uygulama Ayarları",
+        "app_language": "Uygulama Dili",
+        "notifications": "Bildirimler",
+        "silent_hours": "Sessiz Saatler",
+        "silent_hours_desc": "Gece Bildirimlerini Sustur",
+        "announcement_notifications": "Duyuru Bildirimleri",
+        "announcement_notifications_desc": "Siteden Haber Al",
+        "security": "Güvenlik & Erişim",
+        "biometrics": "FaceID / Parmak İzi",
+        "biometrics_desc": "Biyometrik Kilit",
+        "emergency_contacts": "Acil Durum Kişileri",
+        "emergency_contacts_desc": "SMS Listesini Düzenle",
+        "logout": "Oturumu Kapat"
+    },
+    "dashboard": {
+        "welcome": "HOŞ GELDİNİZ",
+        "dues_debt": "Aidat Borcu",
+        "new_announcement": "Yeni Duyuru",
+        "quick_access": "Hızlı Erişim",
+        "guest_code": "Ziyaretçi Kodu",
+        "courier_notify": "Kurye Bildirimi",
+        "staff_call": "Personel Çağır",
+        "taxi_call": "Taksi Çağır",
+        "panic_button": "Acil Durum (Panik Butonu)",
+        "admin_panel": "YÖNETİCİ PANELİ",
+        "financial_summary": "Finansal Özet",
+        "budget_liquidity": "Bütçe ve Likidite",
+        "income": "GELİR",
+        "expense": "GİDER",
+        "technical_ticket": "Teknik Talep",
+        "active_resident": "Aktif Sakin"
+    },
+    "tabbar": {
+        "dashboard": "ÖZET",
+        "finance": "FİNANS",
+        "admin": "YÖNETİM",
+        "services": "HİZMET",
+        "community": "YAŞAM",
+        "settings": "AYARLAR"
+    },
+    "finance": {
+        "title": "Aidat Hesabı",
+        "total_debt": "Toplam Aidat Borcu",
+        "pay_now": "Ödeme Yap",
+        "safe_payment": "Güvenli Ödeme Paneli",
+        "payment_success": "Ödeme işlemi başarıyla tamamlandı.",
+        "analysis": "Finansal Analiz",
+        "analyzing": "İnceleniyor...",
+        "analyze_btn": "Yapay Zeka Analizi"
+    },
+    "services": {
+        "title": "Hizmet Paneli",
+        "admin_title": "Tesis Yönetimi",
+        "usage_logs": "Tesis Kullanım Kayıtları",
+        "usage_logs_desc": "Sakinlerin tesis ve hizmet kullanım detayları.",
+        "add_service": "Yeni Hizmet Ekle",
+        "my_services": "Hizmetlerim",
+        "technical_support": "Teknik Destek Hattı",
+        "new_ticket": "Yeni Talep Oluştur",
+        "ticket_success": "Destek talebiniz oluşturuldu."
+    },
+    "common": {
+        "turkish": "Türkçe",
+        "english": "English",
+        "confirm": "Onayla",
+        "cancel": "İptal",
+        "status_updated": "Durum güncellendi."
+    }
+}

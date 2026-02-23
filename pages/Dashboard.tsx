@@ -3,21 +3,45 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import Card from '../components/Card';
 import { AppPermission } from '../types';
+import { ShieldAlert, Car, QrCode, Bell, Package } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard: React.FC = () => {
   const { user, property, openModal, showToast, logout, globalStats, hasPermission } = useApp();
+  const { t } = useTranslation();
 
   const handleGuestQR = () => {
     openModal({
       type: 'QR',
-      title: 'Ziyaretçi Geçiş Protokolü',
+      title: t('dashboard.guest_code'),
       message: 'Güvenlik taraması için bu kodu resepsiyon kamerasında okutunuz.',
       data: `REGORA-GUEST-${user.id}-${Date.now()}`
     });
   };
 
-  const handleTaxi = () => {
-    showToast('VIP Taksi adresinize yönlendiriliyor...', 'info');
+  const handleStaffCall = () => {
+    showToast(`${t('dashboard.staff_call')}...`, 'info');
+  };
+
+  const handleCourier = () => {
+    openModal({
+      type: 'COURIER_SELECT',
+      title: t('dashboard.courier_notify'),
+      onConfirm: (brand: string) => {
+        if (brand === 'Diğer') {
+          const otherBrand = prompt('Lütfen firma adını yazınız:');
+          if (otherBrand) showToast(`${otherBrand} kuryesi için güvenlik onayı verildi.`, 'success');
+        } else {
+          showToast(`${brand} kuryesi için güvenlik onayı verildi.`, 'success');
+        }
+      }
+    });
+  };
+
+  const handlePanic = () => {
+    if (confirm('Site Güvenliği aranıyor, emin misiniz?')) {
+      showToast('Güvenlik birimine acil durum sinyali gönderildi!', 'error');
+    }
   };
 
   if (hasPermission(AppPermission.VIEW_ADMIN_DASHBOARD)) {
@@ -25,8 +49,8 @@ const Dashboard: React.FC = () => {
       <div className="space-y-6 animate-fade-in pb-24">
         <div className="flex justify-between items-center px-2">
           <div>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">YÖNETİCİ TERMİNALİ</p>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Portföy Özeti</h1>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{t('dashboard.admin_panel')}</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">{t('dashboard.financial_summary')}</h1>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={logout} className="p-2 bg-dark-card border border-dark-border rounded-full hover:bg-white/10 transition-colors">
@@ -39,11 +63,11 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <Card gradient className="col-span-2 border-white/10">
             <div>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">Kurumsal Likidite</p>
+              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">{t('dashboard.budget_liquidity')}</p>
               <h2 className="text-4xl font-bold text-white tracking-tighter">₺{globalStats.totalBalance.toLocaleString()}</h2>
               <div className="flex gap-3 mt-4">
-                <span className="text-green-400 text-[10px] font-bold bg-green-500/10 px-2 py-1 rounded">GELİR: ₺{globalStats.monthlyIncome.toLocaleString()}</span>
-                <span className="text-red-400 text-[10px] font-bold bg-red-500/10 px-2 py-1 rounded">GİDER: ₺{globalStats.monthlyExpense.toLocaleString()}</span>
+                <span className="text-green-400 text-[10px] font-bold bg-green-500/10 px-2 py-1 rounded">{t('dashboard.income')}: ₺{globalStats.monthlyIncome.toLocaleString()}</span>
+                <span className="text-red-400 text-[10px] font-bold bg-red-500/10 px-2 py-1 rounded">{t('dashboard.expense')}: ₺{globalStats.monthlyExpense.toLocaleString()}</span>
               </div>
             </div>
           </Card>
@@ -53,7 +77,7 @@ const Dashboard: React.FC = () => {
               <span className="material-symbols-rounded text-white text-xl">confirmation_number</span>
               <div>
                 <span className="text-2xl font-bold text-white">{globalStats.activeTickets}</span>
-                <p className="text-[10px] text-gray-500 uppercase font-bold">Teknik Talep</p>
+                <p className="text-[10px] text-gray-500 uppercase font-bold">{t('dashboard.technical_ticket')}</p>
               </div>
             </div>
           </Card>
@@ -63,7 +87,7 @@ const Dashboard: React.FC = () => {
               <span className="material-symbols-rounded text-white text-xl">group</span>
               <div>
                 <span className="text-2xl font-bold text-white">{globalStats.totalResidents}</span>
-                <p className="text-[10px] text-gray-500 uppercase font-bold">Aktif Sakin</p>
+                <p className="text-[10px] text-gray-500 uppercase font-bold">{t('dashboard.active_resident')}</p>
               </div>
             </div>
           </Card>
@@ -76,7 +100,7 @@ const Dashboard: React.FC = () => {
     <div className="space-y-8 animate-fade-in pb-24">
       <div className="flex justify-between items-center px-2">
         <div>
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">HOŞ GELDİNİZ,</p>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{t('dashboard.welcome')},</p>
           <h1 className="text-3xl font-bold text-white tracking-tight">{user.name}</h1>
         </div>
         <div className="flex items-center gap-3">
@@ -99,7 +123,7 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-col h-full justify-between gap-6">
             <span className="material-symbols-rounded text-white p-2 bg-white/10 rounded-xl w-fit">payments</span>
             <div>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Cari Borç</p>
+              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{t('dashboard.dues_debt')}</p>
               <p className="text-2xl font-bold text-white mt-1">₺{Math.abs(user.balance).toLocaleString()}</p>
             </div>
           </div>
@@ -109,7 +133,7 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-col h-full justify-between gap-6">
             <span className="material-symbols-rounded text-gray-400 p-2 bg-white/5 rounded-xl w-fit">notifications</span>
             <div>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Yeni Duyuru</p>
+              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{t('dashboard.new_announcement')}</p>
               <p className="text-2xl font-bold text-white mt-1">1</p>
             </div>
           </div>
@@ -117,15 +141,36 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-2">Hızlı Erişim</h2>
+        <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-2">{t('dashboard.quick_access')}</h2>
         <div className="grid grid-cols-2 gap-3 px-2">
-          <button onClick={handleGuestQR} className="flex flex-col gap-3 bg-dark-surface border border-dark-border rounded-3xl p-5 hover:bg-dark-card transition-colors active:scale-95 text-left">
-            <span className="material-symbols-rounded text-white text-3xl">qr_code_scanner</span>
-            <p className="text-sm font-bold text-white">Ziyaretçi Kodu</p>
+          {/* Ziyaretçi Kodu */}
+          <button onClick={handleGuestQR} className="flex flex-col gap-3 bg-[#121212] border border-white/5 rounded-3xl p-5 hover:bg-white/5 transition-all active:scale-95 text-left group">
+            <QrCode className="text-white w-7 h-7" />
+            <p className="text-sm font-bold text-white uppercase tracking-wider">{t('dashboard.guest_code')}</p>
           </button>
-          <button onClick={handleTaxi} className="flex flex-col gap-3 bg-dark-surface border border-dark-border rounded-3xl p-5 hover:bg-dark-card transition-colors active:scale-95 text-left">
-            <span className="material-symbols-rounded text-white text-3xl">local_taxi</span>
-            <p className="text-sm font-bold text-white">VIP Ulaşım</p>
+
+          {/* Kurye Bildir */}
+          <button onClick={handleCourier} className="flex flex-col gap-3 bg-[#121212] border border-white/5 rounded-3xl p-5 hover:bg-white/5 transition-all active:scale-95 text-left group">
+            <Package className="text-white w-7 h-7" />
+            <p className="text-sm font-bold text-white uppercase tracking-wider">{t('dashboard.courier_notify')}</p>
+          </button>
+
+          {/* Personel Çağır */}
+          <button onClick={handleStaffCall} className="flex flex-col gap-3 bg-[#121212] border border-white/5 rounded-3xl p-5 hover:bg-white/5 transition-all active:scale-95 text-left group">
+            <Bell className="text-white w-7 h-7" />
+            <p className="text-sm font-bold text-white uppercase tracking-wider">{t('dashboard.staff_call')}</p>
+          </button>
+
+          {/* Taksi Çağır */}
+          <button onClick={() => showToast('Taksi çağrıldı, kapıya yönlendiriliyor.', 'info')} className="flex flex-col gap-3 bg-[#121212] border border-white/5 rounded-3xl p-5 hover:bg-white/5 transition-all active:scale-95 text-left group">
+            <Car className="text-white w-7 h-7" />
+            <p className="text-sm font-bold text-white uppercase tracking-wider">{t('dashboard.taxi_call')}</p>
+          </button>
+
+          {/* Acil Durum (Panic Button) */}
+          <button onClick={handlePanic} className="col-span-2 flex flex-row items-center justify-center gap-3 bg-[#121212] border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)] rounded-3xl p-5 hover:bg-red-500/10 transition-all active:scale-95 text-left group">
+            <ShieldAlert className="text-white w-7 h-7 group-hover:text-red-400 transition-colors" />
+            <p className="text-sm font-bold text-white group-hover:text-red-400 transition-colors uppercase tracking-wider">{t('dashboard.panic_button')}</p>
           </button>
         </div>
       </div>

@@ -24,15 +24,28 @@ interface SessionData {
 }
 
 const getInitialData = (): DatabaseSchema => {
-  const adminUser: User = {
-    id: 'admin_1',
-    siteId: 's1',
-    username: 'admin',
-    name: 'REGORA Yönetim',
-    avatar: 'https://ui-avatars.com/api/?name=REGORA&background=000&color=fff',
-    role: UserRole.ADMIN,
+  const patronUser: User = {
+    id: 'patron_1',
+    siteId: 'global',
+    username: 'patron',
+    name: 'REGORA Patron',
+    avatar: 'https://ui-avatars.com/api/?name=PATRON&background=000&color=fff',
+    role: UserRole.SUPER_ADMIN,
     apartment: 'Genel Merkez',
-    status: 'active',
+    status: 'approved',
+    balance: 0,
+    household: []
+  };
+
+  const managerUser: User = {
+    id: 'manager_1',
+    siteId: 's1',
+    username: 'manager',
+    name: 'Ahmet Müdür',
+    avatar: 'https://ui-avatars.com/api/?name=Ahmet+M&background=000&color=fff',
+    role: UserRole.MANAGER,
+    apartment: 'Yönetim Ofisi',
+    status: 'approved',
     balance: 0,
     household: []
   };
@@ -41,15 +54,16 @@ const getInitialData = (): DatabaseSchema => {
     ...MOCK_USER,
     siteId: 's1',
     username: 'regora_user',
-    status: 'active',
+    status: 'approved',
     block: 'A',
     apartment: '104',
+    role: UserRole.RESIDENT,
     phoneNumber: '5551234567'
   };
 
   return {
     sites: MOCK_SITES,
-    users: [residentUser, adminUser],
+    users: [patronUser, managerUser, residentUser],
     tickets: MOCK_TICKETS.map(t => ({ ...t, siteId: 's1', userId: 'u1' })),
     transactions: MOCK_TRANSACTIONS.map(t => ({ ...t, userId: 'u1' })),
     announcements: MOCK_ANNOUNCEMENTS.map(a => ({ ...a, siteId: 's1' })),
@@ -90,7 +104,7 @@ class DatabaseService {
       const user = this.data.users.find(u => u.id === session.userId);
       const site = this.data.sites.find(s => s.id === session.siteId);
 
-      if (user && site && user.status === 'active') {
+      if (user && site && user.status === 'approved') {
         return { user, site };
       }
     } catch (e) {
@@ -144,7 +158,7 @@ class DatabaseService {
   async approveUser(userId: string): Promise<void> {
     const user = this.data.users.find(u => u.id === userId);
     if (user) {
-      user.status = 'active';
+      user.status = 'approved';
       this.save();
     }
   }
@@ -156,7 +170,7 @@ class DatabaseService {
 
   async getGlobalStats(siteId: string): Promise<GlobalStats> {
     const siteTickets = this.data.tickets.filter(t => t.siteId === siteId);
-    const siteUsers = this.data.users.filter(u => u.siteId === siteId && u.status === 'active');
+    const siteUsers = this.data.users.filter(u => u.siteId === siteId && u.status === 'approved');
     const activeTickets = siteTickets.filter(t => t.status !== 'resolved').length;
     const totalResidents = siteUsers.reduce((acc, u) => acc + 1 + (u.household?.length || 0), 0);
     const monthlyIncome = 85000;

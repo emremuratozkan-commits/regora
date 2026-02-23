@@ -3,10 +3,12 @@ import React, { createContext, useContext, useState, useEffect, PropsWithChildre
 import { User, Property, ModalContent, ToastMessage, UserRole, PropertyFeatures, Announcement, ForumPost, Poll, Site, ServiceLog, ActivityLog, GlobalStats, HouseholdMember, ServiceItem, Ticket, AppPermission, CameraPreferences, PushNotification, ThemeAccent } from '../types';
 import { ALL_SERVICES, MOCK_POLL, ROLE_PERMISSIONS } from '../constants';
 import { authService } from '../services/AuthService';
+import apiService from '../services/api.service';
 import siteService from '../services/site.service';
 import ticketService from '../services/ticket.service';
 import announcementService from '../services/announcement.service';
 import userService from '../services/user.service';
+import i18n from '../i18n';
 
 declare global {
     interface Window {
@@ -75,11 +77,18 @@ interface AppContextType {
     setTheme: (theme: ThemeAccent) => void;
     addLicensePlate: (plate: string) => void;
     refreshData: () => Promise<void>;
+    allUsers: User[];
+    assignManager: (siteId: string, managerId: string) => Promise<void>;
+    assignStaff: (siteId: string, userId: string, jobTitle: string) => Promise<void>;
+    createAuthority: (data: { name: string; username: string; role: UserRole; jobTitle: string; password?: string }) => Promise<void>;
+    confirmPasswordChange: (newPassword: string) => Promise<void>;
+    language: 'tr' | 'en';
+    setLanguage: (lang: 'tr' | 'en') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const INITIAL_USER: User = { id: '', siteId: '', username: '', name: '', role: UserRole.RESIDENT, avatar: '', apartment: '', balance: 0, household: [], licensePlates: [] };
+const INITIAL_USER: User = { id: '', siteId: '', username: '', name: '', role: UserRole.RESIDENT, avatar: '', apartment: '', status: 'approved', balance: 0, household: [], licensePlates: [] };
 const INITIAL_PROPERTY: Property = { id: '', name: '', address: '', city: '', managerName: '', blockCount: 0, unitCount: 0, duesAmount: 0, block: '', features: {} as PropertyFeatures };
 const INITIAL_STATS: GlobalStats = { taxiCount: 0, guestCount: 0, totalBalance: 0, monthlyIncome: 0, monthlyExpense: 0, activeTickets: 0, collectionRate: 0, totalResidents: 0, averageRating: 0 };
 
@@ -101,10 +110,18 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
     const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [globalStats, setGlobalStats] = useState<GlobalStats>(INITIAL_STATS);
     const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [modal, setModal] = useState<ModalContent | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+    const initialLang = (i18n.language?.split('-')[0] as 'tr' | 'en') || 'tr';
+    const [language, setLanguageState] = useState<'tr' | 'en'>(initialLang === 'en' ? 'en' : 'tr');
+
+    const setLanguage = (lang: 'tr' | 'en') => {
+        i18n.changeLanguage(lang);
+        setLanguageState(lang);
+    };
 
     // Fetch data from API
     const refreshData = useCallback(async () => {
@@ -130,11 +147,28 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
                 setGlobalStats(statsResponse.data);
             }
 
-            // Fetch pending users for admin
-            if (user.role === UserRole.ADMIN) {
+            // Fetch pending users for management roles
+            const isManagement = user.role === UserRole.SUPER_ADMIN || user.role === UserRole.MANAGER;
+            if (isManagement) {
                 const pendingResponse = await userService.getPendingUsers(property.id);
                 if (pendingResponse.data) {
                     setPendingUsers(pendingResponse.data);
+                }
+
+                // Fetch all users for assignment if management role
+                if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.MANAGER) {
+                    // For mock purposes, we'll just set some users if the API fails or is not ready
+                    const usersResponse = await apiService.get<User[]>('/users');
+                    if (usersResponse.data) {
+                        setAllUsers(usersResponse.data);
+                    } else {
+                        // Mock fallback users
+                        setAllUsers([
+                            { id: 'm1', name: 'Alp Arslan', role: UserRole.MANAGER, username: 'alp', siteId: '', avatar: '', apartment: '', status: 'approved', balance: 0, household: [], licensePlates: [] },
+                            { id: 'm2', name: 'Buse Terim', role: UserRole.RESIDENT, username: 'buse', siteId: '', avatar: '', apartment: '', status: 'approved', balance: 0, household: [], licensePlates: [] },
+                            { id: 'm3', name: 'Cem Yılmaz', role: UserRole.STAFF, username: 'cem', siteId: '', avatar: '', apartment: '', status: 'approved', balance: 0, household: [], licensePlates: [] }
+                        ]);
+                    }
                 }
             }
         } catch (error) {
@@ -237,6 +271,8 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
         try {
             const newUser = await authService.register(name, username, phoneNumber, siteId, block, apartment);
             if (newUser) {
+                setUser(newUser);
+                setIsAuthenticated(true);
                 showToast('Başvuru alındı. REGORA onayı bekleniyor.', 'success');
                 setIsLoading(false);
                 return true;
@@ -331,6 +367,9 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
             const response = await siteService.createSite(siteData);
             if (response.data) {
                 setSites(prev => [...prev, response.data!]);
+                if (siteData.managerId) {
+                    await assignManager(response.data.id, siteData.managerId);
+                }
                 showToast('Site başarıyla eklendi.', 'success');
             }
         } catch (error) {
@@ -344,6 +383,12 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
             if (response.data) {
                 setSites(prev => prev.map(s => s.id === site.id ? response.data! : s));
                 if (property.id === site.id) setProperty(response.data);
+
+                // If manager changed, re-assign (mock logic handles overrides)
+                if (site.managerId) {
+                    await assignManager(site.id, site.managerId);
+                }
+
                 showToast('Site bilgileri güncellendi.', 'success');
             }
         } catch (error) {
@@ -366,7 +411,7 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
             id: `log_${Date.now()}`,
             serviceName,
             userName: user.name,
-            userApartment: user.apartment,
+            userApartment: user.apartment || 'Genel',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             date: new Date().toLocaleDateString(),
             icon,
@@ -380,7 +425,7 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
             const response = await userService.addHouseholdMember(name, relation);
             if (response.data) {
                 setUser(response.data);
-                logActivity('household', 'Kişi Eklendi', `${name} (${relation})`);
+                logActivity('household', 'Kişi Eklendi', `${name} (${relation || 'Diğer'})`);
             }
         } catch (error) {
             showToast('Kişi eklenemedi.', 'error');
@@ -401,6 +446,43 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
         const updatedProperty = { ...property, features: { ...property.features, [service.key]: true } };
         setProperty(updatedProperty);
         siteService.updateSite(property.id, { features: updatedProperty.features });
+    };
+
+    const assignManager = async (siteId: string, managerId: string) => {
+        try {
+            // Mock API call
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const selectedManager = allUsers.find(u => u.id === managerId);
+
+            setSites(prev => prev.map(s =>
+                s.id === siteId ? { ...s, managerId, managerName: selectedManager?.name || 'Bilinmiyor' } : s
+            ));
+
+            if (property.id === siteId) {
+                setProperty(prev => ({ ...prev, managerId, managerName: selectedManager?.name || 'Bilinmiyor' }));
+            }
+
+            // Update user role to MANAGER if they were resident
+            setAllUsers(prev => prev.map(u =>
+                u.id === managerId ? { ...u, role: UserRole.MANAGER, siteId } : u
+            ));
+
+            showToast('Yönetici ataması başarıyla yapıldı.', 'success');
+        } catch (error) {
+            showToast('Atama sırasında hata oluştu.', 'error');
+        }
+    };
+
+    const assignStaff = async (siteId: string, userId: string, jobTitle: string) => {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            setAllUsers(prev => prev.map(u =>
+                u.id === userId ? { ...u, role: UserRole.STAFF, siteId, jobTitle } : u
+            ));
+            showToast('Personel ataması başarıyla yapıldı.', 'success');
+        } catch (error) {
+            showToast('Atama sırasında hata oluştu.', 'error');
+        }
     };
 
     const approveUser = async (userId: string) => {
@@ -506,15 +588,51 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
     const setTheme = (t: ThemeAccent) => setThemeState(t);
     const dismissPushNotification = () => { };
 
+    const createAuthority = async (data: { name: string; username: string; role: UserRole; jobTitle: string; password?: string }) => {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            const newUser: User = {
+                id: 'auth_' + Date.now(),
+                name: data.name,
+                username: data.username,
+                role: data.role,
+                jobTitle: data.jobTitle,
+                status: 'approved',
+                isStaff: true,
+                forcePasswordChange: true,
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random`,
+                balance: 0,
+                household: [],
+                licensePlates: []
+            };
+            setAllUsers(prev => [...prev, newUser]);
+            showToast('Yetkili hesabı oluşturuldu.', 'success');
+        } catch (error) {
+            showToast('Hesap oluşturulurken hata oluştu.', 'error');
+        }
+    };
+
+    const confirmPasswordChange = async (newPassword: string) => {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            setUser(prev => ({ ...prev, forcePasswordChange: false }));
+            setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u, forcePasswordChange: false } : u));
+            showToast('Şifreniz başarıyla güncellendi.', 'success');
+        } catch (error) {
+            showToast('Şifre güncellenemedi.', 'error');
+        }
+    };
+
     return (
         <AppContext.Provider value={{
             user, property, sites, services, announcements, forumPosts, tickets, activePoll, serviceLogs, activities,
             globalStats, cameraPermissions, pushNotifications, notificationHistory, unreadNotificationCount: 0, pendingUsers, theme,
             isLoading, isAuthenticated, modal, toast, openModal, closeModal, showToast, toggleRole: () => { }, updatePropertyFeature,
+            allUsers, assignManager, assignStaff, createAuthority, confirmPasswordChange,
             login, register, approveUser, rejectUser, logout, addAnnouncement, addForumPost, approveForumPost, createPoll, addSite, updateSite, removeSite, switchSite,
             logActivity, addServiceLog, addHouseholdMember, removeHouseholdMember, addNewService, updateTicketStatus,
             addTicket, submitServiceRatings, hasPermission, toggleCameraPermission, updateUserAvatar, sendPushNotification: () => { },
-            dismissPushNotification, markNotificationsAsRead, clearAllNotifications, setTheme, addLicensePlate, refreshData
+            dismissPushNotification, markNotificationsAsRead, clearAllNotifications, setTheme, addLicensePlate, refreshData, language, setLanguage
         }}>
             {children}
         </AppContext.Provider>

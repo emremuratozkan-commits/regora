@@ -1,8 +1,9 @@
 
 export enum UserRole {
-  RESIDENT = 'RESIDENT',
-  ADMIN = 'ADMIN',
-  TECHNICIAN = 'TECHNICIAN'
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  MANAGER = 'MANAGER',
+  STAFF = 'STAFF',
+  RESIDENT = 'RESIDENT'
 }
 
 export enum AppPermission {
@@ -53,8 +54,9 @@ export interface Site {
   duesAmount: number;
   imageUrl?: string; // New: Cover image for the site
   managementPlanUrl?: string;
-  features: PropertyFeatures; 
-  block?: string; 
+  features: PropertyFeatures;
+  block?: string;
+  managerId?: string; // Relation to the Manager
 }
 
 export type SiteOption = Site;
@@ -71,7 +73,7 @@ export interface HouseholdMember {
 
 export interface ServiceItem {
   id: string;
-  key: string; 
+  key: string;
   title: string;
   description: string;
   icon: string;
@@ -81,14 +83,17 @@ export interface ServiceItem {
 
 export interface User {
   id: string;
-  siteId: string; // Foreign Key to Site
+  siteId?: string; // Foreign Key to Site (Optional for Super Admin)
   name: string;
   avatar: string;
   role: UserRole;
   block?: string; // New: Block info
-  apartment: string;
+  apartment?: string;
   phoneNumber?: string; // New: Phone Number
-  status?: 'active' | 'pending' | 'rejected'; // New: Approval status
+  status: 'pending' | 'approved' | 'rejected'; // Updated status
+  jobTitle?: string; // New: Specific staff role (Security, Janitor, etc.)
+  isStaff?: boolean;
+  forcePasswordChange?: boolean;
   balance: number;
   household: HouseholdMember[];
   licensePlates?: string[]; // Added license plates
@@ -112,8 +117,9 @@ export interface Ticket {
   title: string;
   description: string;
   requestorName: string;
-  category: 'maintenance' | 'security' | 'cleaning' | 'landscape' | 'technical'; // Expanded categories
+  category: 'maintenance' | 'security' | 'cleaning' | 'landscape' | 'technical' | 'GUEST_ACCESS' | 'TAXI_REQUEST' | 'EMERGENCY' | 'MAINTENANCE' | 'FACILITY_RESERVE';
   status: 'open' | 'in_progress' | 'resolved';
+  targetRole?: UserRole;
   date: string;
   attachment?: string;
 }
@@ -150,7 +156,7 @@ export interface ForumPost {
 
 export interface ServiceLog {
   id: string;
-  serviceName: string; 
+  serviceName: string;
   userName: string;
   userApartment: string;
   time: string;
@@ -172,12 +178,12 @@ export interface GlobalStats {
   taxiCount: number;
   guestCount: number;
   totalBalance: number;
-  monthlyIncome: number; 
-  monthlyExpense: number; 
+  monthlyIncome: number;
+  monthlyExpense: number;
   activeTickets: number;
-  collectionRate: number; 
-  totalResidents: number; 
-  averageRating: number; 
+  collectionRate: number;
+  totalResidents: number;
+  averageRating: number;
 }
 
 export interface BankDetails {
@@ -196,30 +202,35 @@ export interface AdminSiteStats {
 }
 
 // UI Types
-export type ModalType = 
-  | 'QR' 
-  | 'PAYMENT' 
-  | 'TICKET' 
-  | 'TICKET_DETAIL' 
-  | 'EMERGENCY' 
-  | 'CONFIRMATION' 
-  | 'REAL_ESTATE' 
-  | 'CREATE_POST' 
-  | 'CREATE_ANNOUNCEMENT' 
+export type ModalType =
+  | 'QR'
+  | 'PAYMENT'
+  | 'TICKET'
+  | 'TICKET_DETAIL'
+  | 'EMERGENCY'
+  | 'CONFIRMATION'
+  | 'REAL_ESTATE'
+  | 'CREATE_POST'
+  | 'CREATE_ANNOUNCEMENT'
   | 'CREATE_POLL'
   | 'SERVICE_LOGS'
-  | 'MANAGE_SITE' 
+  | 'MANAGE_SITE'
   | 'FACILITY_SETTINGS'
   | 'MANAGE_HOUSEHOLD'
   | 'ADD_SERVICE'
   | 'RATE_SERVICES'
   | 'FORGOT_PASSWORD'
-  | 'CAMERA_SETTINGS' 
+  | 'CAMERA_SETTINGS'
   | 'NOTIFICATION_CENTER'
   | 'ADMIN_REPORTS'
   | 'RESERVATION'
   | 'ADD_LICENSE_PLATE'
   | 'MANAGE_USERS' // New
+  | 'ASSIGN_MANAGER' // New
+  | 'MANAGE_STAFF' // New
+  | 'COURIER_SELECT'
+  | 'LANGUAGE_SELECT'
+  | 'USER_CREATION' // New
   | null;
 
 export interface ModalContent {

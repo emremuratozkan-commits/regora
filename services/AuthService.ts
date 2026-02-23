@@ -40,17 +40,16 @@ export interface RegisterRequest {
 const AUTH_STORAGE_KEY = 'regora_auth_tokens';
 const SESSION_STORAGE_KEY = 'regora_session_v3';
 
-// Mock Data
 const MOCK_SITE: Site = {
-    id: 's_demo',
-    name: 'Regora Residence',
-    address: 'Bağdat Caddesi No: 123',
+    id: 's1',
+    name: 'Regora Heights',
+    address: 'Zincirlikuyu Cad. No:1, Levent',
     city: 'İstanbul',
-    managerName: 'Ahmet Yılmaz',
-    blockCount: 4,
-    unitCount: 120,
-    duesAmount: 1500,
-    imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=60',
+    managerName: 'Mehmet Aksoy',
+    blockCount: 2,
+    unitCount: 180,
+    duesAmount: 2450,
+    imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
     features: {
         has_pool: true,
         has_gym: true,
@@ -60,16 +59,47 @@ const MOCK_SITE: Site = {
     }
 };
 
-const MOCK_USER: User = {
-    id: 'u_admin',
-    siteId: 's_demo',
-    username: 'admin',
-    name: 'Site Yöneticisi',
-    role: UserRole.ADMIN,
-    avatar: 'https://ui-avatars.com/api/?name=Admin&background=random',
-    apartment: 'Yönetim',
+const MOCK_PATRON: User = {
+    id: 'patron_1',
+    siteId: 'global',
+    username: 'patron',
+    name: 'REGORA Patron',
+    role: UserRole.SUPER_ADMIN,
+    avatar: 'https://ui-avatars.com/api/?name=PATRON&background=000&color=fff',
+    apartment: 'Genel Merkez',
+    status: 'approved',
     balance: 0,
     household: [],
+    licensePlates: []
+};
+
+const MOCK_MANAGER: User = {
+    id: 'manager_1',
+    siteId: 's1',
+    username: 'manager',
+    name: 'Ahmet Müdür',
+    role: UserRole.MANAGER,
+    avatar: 'https://ui-avatars.com/api/?name=Ahmet+M&background=000&color=fff',
+    apartment: 'Yönetim Ofisi',
+    status: 'approved',
+    balance: 0,
+    household: [],
+    licensePlates: []
+};
+
+const MOCK_RESIDENT: User = {
+    id: 'u1',
+    siteId: 's1',
+    username: 'regora_user',
+    name: 'Can Dağdelen',
+    role: UserRole.RESIDENT,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+    apartment: 'A Blok - Daire 104',
+    status: 'approved',
+    balance: -2450.00,
+    household: [
+        { id: 'h1', name: 'Zeynep Dağdelen', type: 'family', relation: 'Eş' }
+    ],
     licensePlates: []
 };
 
@@ -89,10 +119,12 @@ class AuthService {
      */
     async login(username: string, password: string): Promise<AuthResult | null> {
         // Mock Auth Implementation
-        if (config.features.enableMockAuth || username === 'admin') {
+        if (config.features.enableMockAuth || username === 'patron' || username === 'manager') {
             await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
 
-            if (username === 'admin' && password === 'Admin123') {
+            // Patron / Admin Login
+            if ((username === 'patron' || username === 'admin') && (password.toLowerCase() === 'patron123' || password.toLowerCase() === 'admin123')) {
+                console.log('Mock Login: Patron authenticated');
                 const tokens: AuthTokens = {
                     accessToken: 'mock_access_token_' + Date.now(),
                     refreshToken: 'mock_refresh_token_' + Date.now(),
@@ -100,18 +132,55 @@ class AuthService {
                 };
 
                 await this.storeTokens(tokens);
-                await this.storeSession(MOCK_USER.id, MOCK_SITE.id, MOCK_USER.role);
+                await this.storeSession(MOCK_PATRON.id, 'global', MOCK_PATRON.role);
 
                 return {
-                    user: MOCK_USER,
+                    user: MOCK_PATRON,
+                    site: { ...MOCK_SITE, id: 'global', name: 'Tüm Portföy' },
+                    tokens
+                };
+            }
+
+            // Manager Login
+            if (username === 'manager' && password.toLowerCase() === 'manager123') {
+                console.log('Mock Login: Manager authenticated');
+                const tokens: AuthTokens = {
+                    accessToken: 'mock_access_token_' + Date.now(),
+                    refreshToken: 'mock_refresh_token_' + Date.now(),
+                    expiresAt: Date.now() + 3600000,
+                };
+
+                await this.storeTokens(tokens);
+                await this.storeSession(MOCK_MANAGER.id, MOCK_SITE.id, MOCK_MANAGER.role);
+
+                return {
+                    user: MOCK_MANAGER,
+                    site: MOCK_SITE,
+                    tokens
+                };
+            }
+
+            // Resident Login
+            if (username === 'regora_user') {
+                const tokens: AuthTokens = {
+                    accessToken: 'mock_access_token_' + Date.now(),
+                    refreshToken: 'mock_refresh_token_' + Date.now(),
+                    expiresAt: Date.now() + 3600000,
+                };
+
+                await this.storeTokens(tokens);
+                await this.storeSession(MOCK_RESIDENT.id, MOCK_SITE.id, MOCK_RESIDENT.role);
+
+                return {
+                    user: MOCK_RESIDENT,
                     site: MOCK_SITE,
                     tokens
                 };
             }
 
             // Should fail for incorrect passwords in mock mode too
-            if (username === 'admin' && password !== 'Admin123') {
-                throw new Error('Kullanıcı adı veya şifre hatalı.');
+            if ((username === 'patron' || username === 'admin' || username === 'manager') && password === '') {
+                throw new Error('Şifre gereklidir.');
             }
         }
 
@@ -157,10 +226,10 @@ class AuthService {
                 };
 
                 await this.storeTokens(tokens);
-                await this.storeSession(MOCK_USER.id, MOCK_SITE.id, MOCK_USER.role);
+                await this.storeSession(MOCK_PATRON.id, MOCK_SITE.id, MOCK_PATRON.role);
 
                 return {
-                    user: MOCK_USER,
+                    user: MOCK_PATRON,
                     site: MOCK_SITE,
                     tokens
                 };
@@ -191,6 +260,7 @@ class AuthService {
                 role: UserRole.RESIDENT,
                 avatar: '',
                 apartment: `${block} Blok D:${apartment}`,
+                status: 'pending',
                 balance: 0,
                 household: [],
                 licensePlates: []
@@ -266,11 +336,19 @@ class AuthService {
     async validateSession(): Promise<{ user: User; site: Site } | null> {
         if (config.features.enableMockAuth) {
             const tokens = await this.getStoredTokens();
-            if (tokens) return { user: MOCK_USER, site: MOCK_SITE };
-            // Check session storage
             const sessionStr = localStorage.getItem(SESSION_STORAGE_KEY);
-            if (sessionStr) {
-                return { user: MOCK_USER, site: MOCK_SITE };
+
+            if (tokens && sessionStr) {
+                const session = JSON.parse(sessionStr);
+                let user = MOCK_RESIDENT;
+                let site = MOCK_SITE;
+
+                if (session.role === UserRole.SUPER_ADMIN) user = MOCK_PATRON;
+                else if (session.role === UserRole.MANAGER) user = MOCK_MANAGER;
+
+                if (user.siteId === 'global') site = { ...MOCK_SITE, id: 'global', name: 'Tüm Portföy' };
+
+                return { user, site };
             }
             return null;
         }

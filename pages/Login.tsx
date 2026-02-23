@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Lock, User, Phone, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Building2, Lock, User, Phone, ChevronRight, ArrowLeft, Chrome, Apple } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import {
     loginFormSchema,
@@ -64,7 +64,7 @@ const InputField: React.FC<{
 );
 
 const Login: React.FC = () => {
-    const { login, register, sites } = useApp();
+    const { login, register, sites, showToast } = useApp();
 
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
     const [loginUsername, setLoginUsername] = useState('');
@@ -156,6 +156,16 @@ const Login: React.FC = () => {
         }
     };
 
+    const handleSocialLogin = (provider: 'google' | 'apple') => {
+        if (authMode === 'register') {
+            setRegName(provider === 'google' ? 'Google Kullanıcısı' : 'Apple Kullanıcısı');
+            setRegUsername(provider === 'google' ? 'google_user' : 'apple_user');
+            showToast(`${provider === 'google' ? 'Google' : 'Apple'} hesabınızdan bilgiler çekildi.`, 'info');
+        } else {
+            showToast(`${provider === 'google' ? 'Google' : 'Apple'} ile giriş şu an simüle ediliyor.`, 'info');
+        }
+    };
+
     const handleAdminShortcut = () => {
         setLoginUsername('admin');
         setLoginPassword('Admin123');
@@ -214,7 +224,7 @@ const Login: React.FC = () => {
                             <Lock className="w-7 h-7 text-black stroke-[2.5]" />
                         </motion.div>
                         <h1 className="text-3xl font-bold text-white tracking-[0.2em] uppercase">REGORA</h1>
-                        <p className="text-white/50 text-[10px] tracking-[0.3em] uppercase font-bold mt-1">Estate Technologies</p>
+                        <p className="text-white/50 text-[10px] tracking-[0.3em] uppercase font-bold mt-1">Mülk Yönetim Teknolojileri</p>
                     </div>
 
                     {/* Auth Toggle */}
@@ -287,6 +297,34 @@ const Login: React.FC = () => {
                                 >
                                     Sisteme Giriş Yap
                                 </motion.button>
+
+                                <div className="relative my-8">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-white/10"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
+                                        <span className="bg-transparent px-4 text-white/30 backdrop-blur-3xl">Veya</span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSocialLogin('google')}
+                                        className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95 group"
+                                    >
+                                        <Chrome size={16} className="text-white/60 group-hover:text-white transition-colors" />
+                                        <span className="text-[10px] font-bold text-white/60 group-hover:text-white uppercase tracking-widest">Google</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSocialLogin('apple')}
+                                        className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95 group"
+                                    >
+                                        <Apple size={16} className="text-white/60 group-hover:text-white transition-colors" />
+                                        <span className="text-[10px] font-bold text-white/60 group-hover:text-white uppercase tracking-widest">Apple</span>
+                                    </button>
+                                </div>
                             </motion.form>
                         ) : (
                             <motion.form
@@ -331,6 +369,34 @@ const Login: React.FC = () => {
                                                 icon={<Phone size={18} />}
                                                 error={getFieldError(regErrors, 'phoneNumber')}
                                             />
+
+                                            <div className="relative my-6">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <div className="w-full border-t border-white/10"></div>
+                                                </div>
+                                                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
+                                                    <span className="bg-transparent px-4 text-white/30">Hızlı Kayıt</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSocialLogin('google')}
+                                                    className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95 group"
+                                                >
+                                                    <Chrome size={16} className="text-white/60 group-hover:text-white transition-colors" />
+                                                    <span className="text-[10px] font-bold text-white/60 group-hover:text-white uppercase tracking-widest">Google</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSocialLogin('apple')}
+                                                    className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95 group"
+                                                >
+                                                    <Apple size={16} className="text-white/60 group-hover:text-white transition-colors" />
+                                                    <span className="text-[10px] font-bold text-white/60 group-hover:text-white uppercase tracking-widest">Apple</span>
+                                                </button>
+                                            </div>
                                         </motion.div>
                                     ) : (
                                         <motion.div
@@ -353,8 +419,8 @@ const Login: React.FC = () => {
                                                         onChange={(e) => setRegSiteId(e.target.value)}
                                                         className={`w-full bg-black/40 backdrop-blur-md border ${getFieldError(regErrors, 'siteId') ? 'border-red-500/50' : 'border-white/10'} text-white rounded-2xl pl-11 pr-5 py-4 outline-none appearance-none focus:border-white/40 active:bg-black/60 transition-all font-medium`}
                                                     >
-                                                        <option value="" className="bg-zinc-900">Site Seçiniz</option>
-                                                        {sites.map(s => <option key={s.id} value={s.id} className="bg-zinc-900">{s.name}</option>)}
+                                                        <option value="" className="bg-zinc-900 text-white">Site Seçiniz</option>
+                                                        {sites.map(s => <option key={s.id} value={s.id} className="bg-zinc-900 text-white">{s.name}</option>)}
                                                     </select>
                                                 </div>
                                                 {getFieldError(regErrors, 'siteId') && (
@@ -385,9 +451,9 @@ const Login: React.FC = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
-                                    className="w-full bg-white text-black font-extrabold py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] mt-4 flex items-center justify-center gap-2"
+                                    className="w-full bg-white text-black font-extrabold py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] mt-4 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
                                 >
-                                    {regStep === 1 ? 'DEVAM ET' : 'BAŞVURU YAP'}
+                                    {regStep === 1 ? 'DEVAM ET' : 'KAYDI TAMAMLA'}
                                     <ChevronRight size={14} />
                                 </motion.button>
 
@@ -413,13 +479,13 @@ const Login: React.FC = () => {
                     transition={{ delay: 1 }}
                     className="mt-8 text-center space-y-3"
                 >
-                    <p className="text-[10px] text-white/30 font-bold tracking-[0.3em]">REGORA ESTATE TECHNOLOGIES</p>
+                    <p className="text-[10px] text-white/30 font-bold tracking-[0.3em]">REGORA MÜLK TEKNOLOJİLERİ</p>
                     <div className="h-px w-8 bg-white/10 mx-auto" />
                     <button
                         onClick={handleAdminShortcut}
                         className="text-[10px] text-white/50 hover:text-white font-medium transition-colors tracking-widest uppercase active:scale-95"
                     >
-                        Yönetici Terminali
+                        Yönetici Girişi
                     </button>
                 </motion.div>
             </motion.div>

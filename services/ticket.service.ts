@@ -9,6 +9,7 @@ export interface CreateTicketRequest {
     title: string;
     description: string;
     category: Ticket['category'];
+    targetRole?: Ticket['targetRole'];
     attachment?: string;
 }
 
@@ -21,6 +22,7 @@ export interface TicketFilters {
     userId?: string;
     status?: Ticket['status'];
     category?: Ticket['category'];
+    targetRole?: Ticket['targetRole'];
 }
 
 export const ticketService = {

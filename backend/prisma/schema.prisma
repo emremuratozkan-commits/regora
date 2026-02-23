@@ -13,12 +13,18 @@ model Site {
   id          String   @id @default(cuid())
   name        String
   address     String
+  city        String?
+  imageUrl    String?
   blockCount  Int      @default(1)
   unitCount   Int      @default(0)
+  duesAmount  Float    @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  users         User[]
+  managerId   String?
+  manager     User?    @relation("SiteManager", fields: [managerId], references: [id])
+
+  users         User[] @relation("SiteResidents")
   tickets       Ticket[]
   announcements Announcement[]
   forumPosts    ForumPost[]
@@ -36,15 +42,20 @@ model User {
   avatar        String?
   role          UserRole @default(RESIDENT)
   status        UserStatus @default(PENDING)
+  isStaff       Boolean  @default(false)
+  forcePasswordChange Boolean @default(false)
+  jobTitle      String?
   block         String?
   apartment     String?
   balance       Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  siteId        String
-  site          Site     @relation(fields: [siteId], references: [id])
+  siteId        String?
+  site          Site?     @relation("SiteResidents", fields: [siteId], references: [id])
   
+  managedSites  Site[]   @relation("SiteManager")
+
   tickets       Ticket[]
   forumPosts    ForumPost[]
   transactions  Transaction[]
@@ -53,13 +64,14 @@ model User {
 }
 
 enum UserRole {
-  ADMIN
+  SUPER_ADMIN
   MANAGER
+  STAFF
   RESIDENT
 }
 
 enum UserStatus {
-  ACTIVE
+  APPROVED
   PENDING
   REJECTED
   SUSPENDED
@@ -92,6 +104,8 @@ model Ticket {
   user        User         @relation(fields: [userId], references: [id])
   siteId      String
   site        Site         @relation(fields: [siteId], references: [id])
+  
+  targetRole  UserRole?    @default(STAFF)
   
   comments    TicketComment[]
 }
