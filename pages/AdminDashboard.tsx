@@ -213,6 +213,75 @@ const AdminDashboard: React.FC = () => {
                 </Card>
             </div>
 
+            {/* DEĞERLEME VE SATIŞ TALEPLERİ */}
+            <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center px-2">
+                    <h2 className="text-lg font-bold">Değerleme ve Satış Talepleri</h2>
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest border border-purple-500/20">AI Destekli</span>
+                </div>
+                <div className="grid gap-3">
+                    <div className="bg-dark-card p-4 rounded-2xl border border-dark-border flex flex-col gap-4 group hover:border-purple-500/30 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                                    <span className="material-symbols-rounded">psychology</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-200">Daire 104 - ₺12.450.000 bedelle satış ilanı onayı bekliyor</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sakin: Ahmet Yılmaz</p>
+                                </div>
+                            </div>
+                            <span className="text-[10px] text-gray-500 font-bold whitespace-nowrap">Yeni</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button className="flex-1 py-2.5 bg-purple-600 text-white text-[10px] font-black uppercase rounded-xl shadow-lg shadow-purple-600/20 hover:bg-purple-500 transition-all">İlanı Yayınla</button>
+                            <button className="flex-1 py-2.5 bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase rounded-xl hover:bg-white/10 transition-all">Sakinle İletişime Geç</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* EMLAK TALEPLERİ (Sale/Tour) */}
+            <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center px-2">
+                    <h2 className="text-lg font-bold">Emlak Talepleri</h2>
+                    <span className="text-xs text-blue-400 font-bold uppercase">Yeni Fırsat</span>
+                </div>
+                <div className="grid gap-3">
+                    <div className="bg-dark-card p-4 rounded-2xl border border-dark-border flex items-center justify-between group hover:border-blue-500/30 transition-all">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                                <span className="material-symbols-rounded">360</span>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-200">Daire 22 - Metin Özgün</p>
+                                <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest">360 Tur İsteği</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] text-gray-500 font-bold">14 Dak. Önce</span>
+                            <button className="p-1 px-3 bg-blue-500 text-white text-[10px] font-black uppercase rounded-lg">Ata</button>
+                        </div>
+                    </div>
+
+                    <div className="bg-dark-card p-4 rounded-2xl border border-dark-border flex items-center justify-between group hover:border-gold-500/30 transition-all">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-gold-500/10 text-gold-500">
+                                <span className="material-symbols-rounded">sell</span>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-200">Daire 105 - Selin Demir</p>
+                                <p className="text-[10px] text-gold-500 font-black uppercase tracking-widest">Satış / Ekspertiz Talebi</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] text-gray-500 font-bold">2 Saat Önce</span>
+                            <button className="p-1 px-3 bg-gold-500 text-black text-[10px] font-black uppercase rounded-lg">İncele</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* ACTIVE TICKETS LIST */}
             <div className="space-y-3 pt-2">
                 <div className="flex justify-between items-center px-2">

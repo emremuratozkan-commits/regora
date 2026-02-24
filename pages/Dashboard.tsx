@@ -2,47 +2,98 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import Card from '../components/Card';
-import { AppPermission } from '../types';
-import { ShieldAlert, Car, QrCode, Bell, Package } from 'lucide-react';
+import { AppPermission, UserRole } from '../types';
+import { ShieldAlert, Car, QrCode, Bell, Package, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const Dashboard: React.FC = () => {
-  const { user, property, openModal, showToast, logout, globalStats, hasPermission } = useApp();
+  const { user, property, openModal, showToast, logout, globalStats, hasPermission, addTicket, tickets } = useApp();
   const { t } = useTranslation();
 
-  const handleGuestQR = () => {
+  const handleGuestQR = async () => {
     openModal({
       type: 'QR',
       title: t('dashboard.guest_code'),
       message: 'Güvenlik taraması için bu kodu resepsiyon kamerasında okutunuz.',
       data: `REGORA-GUEST-${user.id}-${Date.now()}`
     });
+
+    // Notify Security
+    await addTicket({
+      title: 'Ziyaretçi Giriş Talebi',
+      description: `${user.name} (${user.apartment}) için QR kod oluşturuldu.`,
+      category: 'GUEST_ACCESS',
+      targetRole: UserRole.STAFF,
+      requestorName: user.name
+    });
   };
 
   const handleStaffCall = () => {
-    showToast(`${t('dashboard.staff_call')}...`, 'info');
+    openModal({
+      type: 'TICKET',
+      title: 'Hizmet Talebi Oluştur',
+      onConfirm: async (data: any) => {
+        await addTicket({
+          title: data.title,
+          description: data.description,
+          category: 'MAINTENANCE',
+          targetRole: UserRole.STAFF,
+          requestorName: user.name
+        });
+      }
+    });
   };
 
   const handleCourier = () => {
     openModal({
       type: 'COURIER_SELECT',
       title: t('dashboard.courier_notify'),
-      onConfirm: (brand: string) => {
+      onConfirm: async (brand: string) => {
+        let finalBrand = brand;
         if (brand === 'Diğer') {
           const otherBrand = prompt('Lütfen firma adını yazınız:');
-          if (otherBrand) showToast(`${otherBrand} kuryesi için güvenlik onayı verildi.`, 'success');
-        } else {
-          showToast(`${brand} kuryesi için güvenlik onayı verildi.`, 'success');
+          if (!otherBrand) return;
+          finalBrand = otherBrand;
         }
+
+        await addTicket({
+          title: 'Kurye Bekleniyor',
+          description: `${finalBrand} kuryesi için güvenlik onayı verildi.`,
+          category: 'GUEST_ACCESS',
+          targetRole: UserRole.STAFF,
+          requestorName: user.name
+        });
+        showToast(`${finalBrand} kuryesi için güvenlik onayı verildi.`, 'success');
       }
     });
   };
 
-  const handlePanic = () => {
+  const handlePanic = async () => {
     if (confirm('Site Güvenliği aranıyor, emin misiniz?')) {
+      await addTicket({
+        title: 'ACİL DURUM / PANİK SİNYALİ',
+        description: `${user.name} (${user.apartment}) ACİL DURUM SİNYALİ GÖNDERDİ!`,
+        category: 'EMERGENCY',
+        targetRole: UserRole.STAFF,
+        requestorName: user.name
+      });
       showToast('Güvenlik birimine acil durum sinyali gönderildi!', 'error');
     }
   };
+
+  const handleTaxi = async () => {
+    await addTicket({
+      title: 'VIP Ulaşım Talebi',
+      description: `${user.name} (${user.apartment}) için taksi talep edildi.`,
+      category: 'TAXI_REQUEST',
+      targetRole: UserRole.STAFF,
+      requestorName: user.name
+    });
+    showToast('Taksi çağrıldı, kapıya yönlendiriliyor.', 'info');
+  };
+
+  const activeUserTickets = tickets.filter(t => t.userId === user.id && t.status !== 'resolved');
+  const latestTicket = activeUserTickets[0];
 
   if (hasPermission(AppPermission.VIEW_ADMIN_DASHBOARD)) {
     return (
@@ -118,6 +169,24 @@ const Dashboard: React.FC = () => {
         <span className="text-xs font-bold text-gray-300 tracking-wide">{property.name}</span>
       </div>
 
+      {latestTicket && (
+        <div className="mx-2 p-4 bg-blue-500/10 border border-blue-500/20 rounded-3xl animate-pulse">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {latestTicket.status === 'open' ? <Clock className="w-4 h-4 text-orange-400" /> : <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                {latestTicket.status === 'open' ? 'Talep İletildi' : 'İşlem Yapılıyor'}
+              </span>
+            </div>
+            <span className="text-[9px] font-bold text-gray-500 uppercase">{latestTicket.category}</span>
+          </div>
+          <p className="text-xs font-bold text-white mb-1">{latestTicket.title}</p>
+          <p className="text-[10px] text-gray-400 font-medium">
+            {latestTicket.status === 'open' ? 'Görevli bekleniyor...' : 'Ekiplerimiz yola çıktı / ilgileniyor.'}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <Card gradient className="col-span-1 border-white/10">
           <div className="flex flex-col h-full justify-between gap-6">
@@ -162,7 +231,7 @@ const Dashboard: React.FC = () => {
           </button>
 
           {/* Taksi Çağır */}
-          <button onClick={() => showToast('Taksi çağrıldı, kapıya yönlendiriliyor.', 'info')} className="flex flex-col gap-3 bg-[#121212] border border-white/5 rounded-3xl p-5 hover:bg-white/5 transition-all active:scale-95 text-left group">
+          <button onClick={handleTaxi} className="flex flex-col gap-3 bg-[#121212] border border-white/5 rounded-3xl p-5 hover:bg-white/5 transition-all active:scale-95 text-left group">
             <Car className="text-white w-7 h-7" />
             <p className="text-sm font-bold text-white uppercase tracking-wider">{t('dashboard.taxi_call')}</p>
           </button>

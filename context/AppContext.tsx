@@ -524,6 +524,7 @@ export const AppProvider = ({ children }: PropsWithChildren) => {
                 title: ticket.title,
                 description: ticket.description,
                 category: ticket.category,
+                targetRole: ticket.targetRole,
                 attachment: ticket.attachment,
             });
             if (response.data) {

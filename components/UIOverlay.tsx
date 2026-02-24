@@ -36,7 +36,8 @@ const UIOverlay: React.FC = () => {
     // Site Form State
     const [siteForm, setSiteForm] = useState<Omit<Site, 'id'>>({
         name: '', address: '', city: '', managerName: '', managerId: '', blockCount: 1, unitCount: 1, duesAmount: 0, imageUrl: '', features: {
-            has_pool: false, has_gym: false, has_freight_elevator: false, has_parking_recognition: false, has_guest_kiosk: false
+            has_pool: false, has_gym: false, has_freight_elevator: false, has_parking_recognition: false, has_guest_kiosk: false,
+            has_vale: false, has_concierge: false, has_taxi: false
         }
     });
     const [assignSearchTerm, setAssignSearchTerm] = useState('');
@@ -45,6 +46,18 @@ const UIOverlay: React.FC = () => {
     const [selectedJobTitle, setSelectedJobTitle] = useState('Teknik Personel');
     const [authForm, setAuthForm] = useState({
         name: '', username: '', role: UserRole.MANAGER, jobTitle: 'Site Müdürü', password: ''
+    });
+
+    // AI Valuation State
+    const [isValuating, setIsValuating] = useState(false);
+    const [showValuationResult, setShowValuationResult] = useState(false);
+
+    // Add Service State
+    const [serviceForm, setServiceForm] = useState({
+        title: '',
+        description: '',
+        icon: 'star',
+        action: 'Talep Et'
     });
 
     useEffect(() => {
@@ -69,6 +82,17 @@ const UIOverlay: React.FC = () => {
         if (modal?.type === 'MANAGE_SITE') {
             if (modal.data) setSiteForm({ ...modal.data });
             else setSiteForm({ name: '', address: '', city: '', managerName: '', managerId: '', blockCount: 1, unitCount: 1, duesAmount: 0, imageUrl: '', features: {} as any });
+        }
+        if (modal?.type === 'AI_VALUATION') {
+            setIsValuating(true);
+            setShowValuationResult(false);
+            setTimeout(() => {
+                setIsValuating(false);
+                setShowValuationResult(true);
+            }, 3000);
+        }
+        if (modal?.type === 'ADD_SERVICE') {
+            setServiceForm({ title: '', description: '', icon: 'star', action: 'Talep Et' });
         }
     }, [modal, property.id]);
 
@@ -144,6 +168,20 @@ const UIOverlay: React.FC = () => {
         if (!siteForm.name) return showToast('Site adı gereklidir.', 'error');
         if (modal?.data?.id) updateSite({ ...siteForm, id: modal.data.id } as Site);
         else addSite(siteForm);
+        closeModal();
+    };
+
+    const handleServiceSubmit = () => {
+        if (!serviceForm.title) return showToast('Hizmet adı gereklidir.', 'error');
+        if (modal?.onConfirm) {
+            const key = `has_${serviceForm.title.toLowerCase().replace(/\s+/g, '_')}`;
+            modal.onConfirm({
+                ...serviceForm,
+                id: `s_${Date.now()}`,
+                key,
+                color: 'text-white'
+            });
+        }
         closeModal();
     };
 
@@ -555,6 +593,67 @@ const UIOverlay: React.FC = () => {
                                 </div>
                             )}
 
+                            {modal.type === 'AI_VALUATION' && (
+                                <div className="space-y-8 py-4">
+                                    {isValuating ? (
+                                        <div className="space-y-6 text-center animate-pulse">
+                                            <div className="w-20 h-20 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(168,85,247,0.5)]">
+                                                <span className="material-symbols-rounded text-white text-4xl animate-spin">data_usage</span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <p className="text-white font-bold text-sm tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Regora AI Analiz Ediyor...</p>
+                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+                                                    Dairenizin konumu, piyasa verileri ve <br /> güncel trendler analiz ediliyor...
+                                                </p>
+                                            </div>
+                                            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-full bg-gradient-to-r from-purple-600 to-blue-500 animate-progress"></div>
+                                            </div>
+                                        </div>
+                                    ) : showValuationResult && (
+                                        <div className="space-y-8 text-center animate-fade-in">
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em]">AI Değerleme Sonucu</p>
+                                                <div className="flex flex-col items-center">
+                                                    <h2 className="text-4xl font-black text-white tracking-tighter italic">₺12.450.000</h2>
+                                                    <div className="flex items-center gap-1 mt-1">
+                                                        <span className="material-symbols-rounded text-emerald-400 text-sm">trending_up</span>
+                                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">%5 Değer Artışı (Son 30 Gün)</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                                                    <p className="text-[8px] text-gray-500 font-bold uppercase mb-1">Bölge Ortalaması</p>
+                                                    <p className="text-xs font-bold text-white">₺11.2M</p>
+                                                </div>
+                                                <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                                                    <p className="text-[8px] text-gray-500 font-bold uppercase mb-1">Talep Endeksi</p>
+                                                    <p className="text-xs font-bold text-emerald-400">%94 Yüksek</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl">
+                                                <p className="text-[10px] text-purple-300 font-medium leading-relaxed">
+                                                    "Bu değerleme Regora AI tarafından son 30 günlük emsal satışlar baz alınarak hesaplanmıştır."
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    if (modal.onConfirm) modal.onConfirm({ price: '12.450.000' });
+                                                    closeModal();
+                                                }}
+                                                className="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-black rounded-[24px] text-[10px] uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(124,58,237,0.3)] active:scale-95 transition-all"
+                                            >
+                                                Yönetime Bildir & İlan Ver
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {modal.type === 'USER_CREATION' && (
                                 <div className="space-y-6">
                                     <div className="space-y-4">
@@ -918,6 +1017,53 @@ const UIOverlay: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {modal.type === 'ADD_SERVICE' && (
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Yeni Hizmet Detayları</p>
+                                            <div className="space-y-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                <div className="relative">
+                                                    <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">label</span>
+                                                    <input type="text" placeholder="Hizmet Adı (Örn: Araç Yıkama)" className="w-full bg-black/40 border border-white/5 rounded-xl pl-11 pr-4 py-3 text-white text-xs outline-none focus:border-blue-500/30 transition-all font-medium" value={serviceForm.title} onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })} />
+                                                </div>
+                                                <div className="relative">
+                                                    <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">description</span>
+                                                    <input type="text" placeholder="Kısa Açıklama" className="w-full bg-black/40 border border-white/5 rounded-xl pl-11 pr-4 py-3 text-white text-xs outline-none focus:border-blue-500/30 transition-all font-medium" value={serviceForm.description} onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Görünüm & Buton</p>
+                                            <div className="space-y-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                <div className="flex gap-3">
+                                                    <div className="w-1/2 space-y-1">
+                                                        <p className="text-[8px] text-gray-600 font-bold uppercase ml-1">İkon (Material Sym.)</p>
+                                                        <input type="text" className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white text-xs outline-none font-bold" value={serviceForm.icon} onChange={(e) => setServiceForm({ ...serviceForm, icon: e.target.value })} />
+                                                    </div>
+                                                    <div className="w-1/2 space-y-1">
+                                                        <p className="text-[8px] text-gray-600 font-bold uppercase ml-1">Buton Metni</p>
+                                                        <input type="text" className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white text-xs outline-none font-bold" value={serviceForm.action} onChange={(e) => setServiceForm({ ...serviceForm, action: e.target.value })} />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3 p-3 bg-blue-500/5 rounded-xl border border-blue-500/10">
+                                                    <span className="material-symbols-rounded text-blue-400">{serviceForm.icon}</span>
+                                                    <p className="text-[9px] text-gray-400 font-medium">Bu ikon sakin ekranında görünecektir.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleServiceSubmit}
+                                        className="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/20 active:scale-95 transition-all"
+                                    >
+                                        HİZMETİ AKTİF ET
+                                    </button>
                                 </div>
                             )}
                         </div>

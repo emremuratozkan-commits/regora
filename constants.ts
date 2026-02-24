@@ -31,7 +31,7 @@ export const MOCK_SITES: Site[] = [
     unitCount: 180,
     duesAmount: 2450,
     imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
-    features: { has_pool: true, has_gym: true, has_freight_elevator: true, has_parking_recognition: true, has_guest_kiosk: true }
+    features: { has_pool: true, has_gym: true, has_freight_elevator: true, has_parking_recognition: true, has_guest_kiosk: true, has_vale: true, has_concierge: true, has_taxi: true }
   },
   {
     id: 's2',
@@ -43,7 +43,7 @@ export const MOCK_SITES: Site[] = [
     unitCount: 45,
     duesAmount: 3800,
     imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800',
-    features: { has_pool: true, has_gym: true, has_freight_elevator: true, has_parking_recognition: true, has_guest_kiosk: true }
+    features: { has_pool: true, has_gym: true, has_freight_elevator: true, has_parking_recognition: true, has_guest_kiosk: true, has_vale: false, has_concierge: false, has_taxi: true }
   },
 ];
 
@@ -55,6 +55,7 @@ export const MOCK_USER: User = {
   avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
   role: UserRole.RESIDENT,
   apartment: 'A Blok - Daire 104',
+  status: 'approved',
   balance: -2450.00,
   household: [
     { id: 'h1', name: 'Zeynep Dağdelen', type: 'family', relation: 'Eş' }
@@ -103,6 +104,33 @@ export const ALL_SERVICES: ServiceItem[] = [
     icon: 'qr_code_2',
     color: 'text-white',
     action: 'QR Üret'
+  },
+  {
+    id: 's6',
+    key: 'has_taxi',
+    title: 'Hızlı Taksi Çağır',
+    description: 'Ortalama Varış: 4 dk',
+    icon: 'local_taxi',
+    color: 'text-white',
+    action: 'Taksi Çağır'
+  },
+  {
+    id: 's7',
+    key: 'has_vale',
+    title: 'Premium Vale',
+    description: 'Aracınız kapıda',
+    icon: 'minor_crash',
+    color: 'text-white',
+    action: 'Araç Çağır'
+  },
+  {
+    id: 's8',
+    key: 'has_concierge',
+    title: 'Concierge Hizmetleri',
+    description: '7/24 Kişisel Asistan',
+    icon: 'room_service',
+    color: 'text-white',
+    action: 'Talep İlet'
   }
 ];
 

@@ -40,6 +40,9 @@ export interface PropertyFeatures {
   has_freight_elevator: boolean;
   has_parking_recognition: boolean;
   has_guest_kiosk: boolean;
+  has_vale: boolean;
+  has_concierge: boolean;
+  has_taxi: boolean;
   [key: string]: boolean;
 }
 
@@ -117,7 +120,7 @@ export interface Ticket {
   title: string;
   description: string;
   requestorName: string;
-  category: 'maintenance' | 'security' | 'cleaning' | 'landscape' | 'technical' | 'GUEST_ACCESS' | 'TAXI_REQUEST' | 'EMERGENCY' | 'MAINTENANCE' | 'FACILITY_RESERVE';
+  category: 'maintenance' | 'security' | 'cleaning' | 'landscape' | 'technical' | 'GUEST_ACCESS' | 'TAXI_REQUEST' | 'EMERGENCY' | 'MAINTENANCE' | 'FACILITY_RESERVE' | 'VALUATION' | 'CONCIERGE' | 'VALE';
   status: 'open' | 'in_progress' | 'resolved';
   targetRole?: UserRole;
   date: string;
@@ -231,6 +234,7 @@ export type ModalType =
   | 'COURIER_SELECT'
   | 'LANGUAGE_SELECT'
   | 'USER_CREATION' // New
+  | 'AI_VALUATION' // New
   | null;
 
 export interface ModalContent {
